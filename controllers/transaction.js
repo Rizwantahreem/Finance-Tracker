@@ -1,11 +1,10 @@
-import { mongo } from "mongoose";
-import { TransactionModal } from "../modals/transaction.modal.js";
+import { TransactionModel } from "../modals/transaction.model.js";
 import mongoose from "mongoose";
 
 // @Desc - Get alltransaction
 export const getTransactions = async (req, res, next) => {
     try {
-        const transactions = await TransactionModal.find({ isDeleted: false });
+        const transactions = await TransactionModel.find({ isDeleted: false });
         res.status(200).json(transactions);
     } catch (error) {
         next({msg: error.message, status : 500});
@@ -18,7 +17,7 @@ export const getTransaction = async (req, res, next) => {
     if (!id)  return res.status(400).json({messaeg: "Invalid ID."})
     
     try {
-        const transaction = await TransactionModal.findById({ _id: id });
+        const transaction = await TransactionModel.findById({ _id: id });
 
         if (!transaction) return res.status(404).json({ message: 'No transaction found' })
 
@@ -34,7 +33,7 @@ export const createTransactionRecord = async (req, res, next) => {
     
     try {
         const body = req.body;
-        const newTransaction = new TransactionModal({
+        const newTransaction = new TransactionModel({
             amount: body.amount,
             purpose: body.purpose,
             sentTo: body.sendTo
@@ -56,7 +55,7 @@ export const deleteTransaction = async (req, res, next) => {
     }
 
     try {
-        const transaction = await TransactionModal.updateOne(
+        const transaction = await TransactionModel.updateOne(
             { _id: id, isDeleted: false },
             { isDeleted: true }
         ); 
@@ -86,7 +85,7 @@ export const updateTransaction = async (req, res, next) => {
             updatedBody[key] = value; 
         });
 
-        const transaction = await TransactionModal.updateOne(
+        const transaction = await TransactionModel.updateOne(
             { _id: id, isDeleted: false },
             { $set: updatedBody }
         )

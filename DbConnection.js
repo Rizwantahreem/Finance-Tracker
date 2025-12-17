@@ -14,7 +14,7 @@ const client = new MongoClient(
     }
 );
 
-export const startServer = async (app, port, req, res, next) => {
+export const startServer = async (app, port) => {
     try {
         await mongoose.connect(
             process.env.CONNECTION_STRING, 
@@ -35,6 +35,7 @@ export const startServer = async (app, port, req, res, next) => {
             console.log(`Server running on port ${port}`)
         });
     } catch (error) {
-        next({msg: error.msg, status: 500});
+        console.error('Application start-up fail', error.message);
+        process.exit(1);
     }
 }

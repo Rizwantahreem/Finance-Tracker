@@ -1,77 +1,101 @@
-let transactions = [
-    { id: 1, amount: 10, purpose: 'transport', sentTo: 'coursera' },
-    { id: 2, amount: 50, purpose: 'shoping', sentTo: 'amazon test' },
-    { id: 3, amount: 700, purpose: 'sent home', sentTo: 'home' },
-    { id: 4, amount: 200, purpose: 'rental', sentTo: 'groveries' },
-    { id: 5, amount: 50, purpose: 'one time groceries', sentTo: 'transportation' },
-    { id: 6, amount: 30, purpose: 'gym and sports', sentTo: 'sports club' },
-    { id: 7, amount: 50, purpose: 'subscriptions', sentTo: 'self care' },
-];
-
+import { TransactionModel } from "../modals/transaction.model.js";
+import mongoose from "mongoose";
 
 // @Desc - Get alltransaction
-export const getTransactions = (req, res, next) => {
-    res.status(200).json(transactions);
-    next()
+export const getTransactions = async (req, res, next) => {
+    try {
+        const transactions = await TransactionModel.find({ isDeleted: false });
+        res.status(200).json(transactions);
+    } catch (error) {
+        next({msg: error.message, status : 500});
+    }
 }
 
 // @Desc - Get single transaction
-export const getTransaction = (req, res, next) => {
+export const getTransaction = async (req, res, next) => {
     const id = req.params.id;
-
     if (!id)  return res.status(400).json({messaeg: "Invalid ID."})
     
-    const transaction = transactions.find((transaction) => transaction.id == id);
+    try {
+        const transaction = await TransactionModel.findById({ _id: id });
 
-    if (!transaction) return res.status(404).json({messaeg: "No transaction Found."})
+        if (!transaction) return res.status(404).json({ message: 'No transaction found' })
 
-    res.json(transaction);
+        res.status(200).json(transaction);
+    } catch (error) {
+        next({msg : error.message , status: 404})
+    }
     
 }
 
 // @Desc - Post Create transaction
-export const createTransactionRecord = (req, res, next) => {
-    const body = req.body;
-
-    const id = transactions[transactions.length -1].id + 1;
-    transactions.push({
-        id: id,
-        amount: body.amount,
-        purpose: body.purpose,
-        sentTo: body.sendTo
-    });
-
-    res.status(201).json({message: 'transaction record created successfully.'})
+export const createTransactionRecord = async (req, res, next) => {
+    
+    try {
+        const body = req.body;
+        const newTransaction = new TransactionModel({
+            amount: body.amount,
+            purpose: body.purpose,
+            sentTo: body.sendTo
+        })
+        
+        await newTransaction.save();
+        res.status(201).json({message: `transaction with id ${newTransaction._id} created successfully`});
+    } catch (error) {
+        next({ msg: error.message, status: 500});
+    }
+   
 }
 
 // @Desc - Delete Create transaction
-export const deleteTransaction = (req, res, next) => {
-    const id = Number(req.params.id);
-    if (!id || isNaN(id)) return res.status(400).json({"message": "Invalid id"});
-
-    const index = transactions.findIndex((transaction) => transaction.id == id);
-    if(index == -1) return res.status(404).json({"message": "No transaction Found"});
-
-    transactions.splice(index, 1);
-    res.status(200).json({message: `transaction with id ${id} deleted successfully`})
-}
-
-export const updateTransaction = (req, res, next) => {
-    const body = req.body;
-    const id = Number(req.params.id);
-
-    if (!id || isNaN(id)) return res.status(400).json({ message: 'Invalid ID' })
-    
-    const index = transactions.findIndex((transaction) => transaction.id == id);
-    if (index == -1) return res.status(404).json({ 'message': `transaction with id ${id} not found` });
-
-    const updatedTransaction = {
-        amount: body?.amount || transactions[index]?.amount,
-        sentTo: body?.sentTo ||  transactions[index]?.sentTo,
-        purpose: body?.purpose || transactions[index]?.purpose,
-        id: transactions[index]?.id
+export const deleteTransaction = async (req, res, next) => {
+    const id = req.params.id;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({"message": "Invalid id"});
     }
 
-    transactions[index] = {...updatedTransaction};
-    res.status(200).json({'message': `transaction with id ${id} updated.`})
+    try {
+        const transaction = await TransactionModel.updateOne(
+            { _id: id, isDeleted: false },
+            { isDeleted: true }
+        ); 
+
+        if (transaction.nModified == 0) {
+            return res.status(404).json({ message: `Transaction with id ${id} not found or already deleted.` });
+        }
+
+        res.status(200).json({ message:  `Transaction with id ${id} deleted successfully`});
+    } catch (error) {
+        next({ msg: error.message });
+    }
+
+}
+
+export const updateTransaction = async (req, res, next) => {
+    const body = req.body;
+    const id = req.params.id;
+
+    if (!id || !body || !mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid ID' });
+    }
+
+    try {
+        let updatedBody = {};
+        Object.entries(body).forEach(([key, value]) => {
+            updatedBody[key] = value; 
+        });
+
+        const transaction = await TransactionModel.updateOne(
+            { _id: id, isDeleted: false },
+            { $set: updatedBody }
+        )
+
+        if (transaction.nModified == 0) {
+            return res.status(404).json({ message: `Transaction with id ${id} not found or already updated.` });
+        }
+
+        res.status(200).json({'message': `transaction with id ${id} updated.`})
+    } catch (error) {
+        next({ msg: error.message })   
+    }
 }

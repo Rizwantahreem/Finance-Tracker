@@ -2,7 +2,7 @@ import express, { urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
 import router from './routers/transaction.js';
 import { errorLogger } from './middlwares/error.middleware.js';
-import { startServer } from './DbConnection.js';
+import { startServer } from './config/DbConnection.js';
 import userRouter from './routers/users.js';
 
 const app = express();

@@ -6,14 +6,15 @@ import {
     deleteTransaction, 
     updateTransaction 
 } from '../controllers/transaction.js';
+import { verifyToken } from '../middlwares/auth.middleware.js';
 
 const transactionRouter = Router();
 
 // @desc - get all transactions
-transactionRouter.get('/', getTransactions);
-transactionRouter.get('/:id', getTransaction);
-transactionRouter.post('/', createTransactionRecord);
-transactionRouter.delete('/:id', deleteTransaction);
-transactionRouter.patch('/:id', updateTransaction);
+transactionRouter.get('/', verifyToken,  getTransactions);
+transactionRouter.get('/:id', verifyToken, getTransaction);
+transactionRouter.post('/', verifyToken, createTransactionRecord);
+transactionRouter.delete('/:id', verifyToken, deleteTransaction);
+transactionRouter.patch('/:id', verifyToken, updateTransaction);
 
 export default transactionRouter;

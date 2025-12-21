@@ -3,9 +3,11 @@ import mongoose from "mongoose";
 
 // @Desc - Get alltransaction
 export const getTransactions = async (req, res, next) => {
+
     try {
-        const transactions = await TransactionModel.find({ isDeleted: false });
-        res.status(200).json(transactions);
+        const transactions = await TransactionModel.find({ isDeleted: false, userID: req.user.userID });
+        console.log(transactions, 'aaaaaaaaaa')
+        res.status(200).json({ transactions: transactions , message: 'Fetched transactions' });
     } catch (error) {
         next({msg: error.message, status : 500});
     }
@@ -36,7 +38,8 @@ export const createTransactionRecord = async (req, res, next) => {
         const newTransaction = new TransactionModel({
             amount: body.amount,
             purpose: body.purpose,
-            sentTo: body.sendTo
+            sentTo: body.sendTo,
+            userID: body.userID
         })
         
         await newTransaction.save();

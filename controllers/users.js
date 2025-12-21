@@ -16,7 +16,8 @@ export const signUp = async (req, res, next) => {
             name: body.name,
             password: encryptedPassword,
             age: body.age,
-            email: body.email
+            email: body.email,
+            role: body.role,
         });
 
         res.status(201).json({ message: `user with id ${user._id} created.`});
@@ -38,9 +39,10 @@ export const signIn = async (req, res, next) => {
         if (!isPassMatched) return res.status(400).json({ message: 'Invalid credentials' });
 
         const signedToken = jwt.sign({
-            email: user.email,
-            age: user.age,
-            name: user.name,
+                email: user.email,
+                age: user.age,
+                name: user.name,
+                role: user.role,
             }, 
             process.env.SECRET_KEY,
             { 
@@ -52,7 +54,6 @@ export const signIn = async (req, res, next) => {
         res.cookie('token', signedToken, {
             httpOnly: true,
             httpOnly: true,
-            // secure: true,        // HTTPS only
             sameSite: 'strict', // CSRF protection
             maxAge: 5 * 60 * 60 * 1000
         })

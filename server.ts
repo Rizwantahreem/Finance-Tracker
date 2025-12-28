@@ -1,11 +1,12 @@
 import express, { urlencoded } from "express";
+import "dotenv/config";
 import cookieParser from "cookie-parser";
 import { errorLogger } from "./middlewares/error.middleware.js";
-import { startServer } from "./config/DbConnection.js";
 import userRouter from "./routers/users.router.js";
 import categoryRouter from "./routers/category.router.js";
-import transactionRouter from "./routers/transaction.router.js";
 import { verifyToken } from "./middlewares/auth.middleware.js";
+import { startServer } from "./config/DbConnection.js";
+import transactionRouter from "./routers/transaction.router.js";
 
 const app = express();
 const port = process.env.Port || 5000;

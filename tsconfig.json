@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+
+    "allowJs": true,
+    "checkJs": false,
+
+    "types": ["node"],
+    "esModuleInterop": true,
+
+    "sourceMap": true,
+
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+
+    "strict": false
+  }
+}

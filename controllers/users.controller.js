@@ -17,6 +17,7 @@ export const signUp = async (req, res, next) => {
       age: body.age,
       email: body.email,
       role: body.role,
+      phoneNumber: body?.phoneNumber || null,
     });
 
     res.status(201).json({ message: `user with id ${user._id} created.` });
@@ -43,6 +44,7 @@ export const signIn = async (req, res, next) => {
         age: user.age,
         name: user.name,
         role: user.role,
+        id: user._id,
       },
       process.env.SECRET_KEY,
       {
@@ -60,23 +62,5 @@ export const signIn = async (req, res, next) => {
     res.status(200).json({ message: "log in successful" });
   } catch (error) {
     next({ msg: error.message });
-  }
-};
-
-export const getUser = async (req, res, next) => {
-  const value = req?.params?.id;
-  const fieldName = req?.params?.id ? "_id" : "email";
-
-  try {
-    const user = await UserModel.findOne({ [fieldName]: value });
-
-    if (!user) {
-      return res.status(404).json({ message: "No user found", user: [] });
-    }
-
-    res.status(200).json({ user: user, message: "fetched user successfully." });
-  } catch (error) {
-    console.log(error, "msg");
-    next({ message: error.message });
   }
 };

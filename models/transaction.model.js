@@ -12,12 +12,12 @@ const transactionSchema = new Schema(
       required: true,
       ref: "category",
     },
-    userID: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "user",
     },
-    transactionDate: { type: Date, required: false, default: Date.now },
+    date: { type: Date, required: false, default: Date.now },
   },
   { timestamps: true }
 );

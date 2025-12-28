@@ -34,14 +34,16 @@ export const getTransaction = async (req, res, next) => {
 };
 
 // @Desc - Post Create transaction
-export const createTransactionRecord = async (req, res, next) => {
+export const createTransaction = async (req, res, next) => {
   try {
     const body = req.body;
     const newTransaction = new TransactionModel({
       amount: body.amount,
-      purpose: body.purpose,
-      sentTo: body.sendTo,
-      userID: body.userID,
+      description: body?.description || "",
+      userId: req.user.id,
+      category: body.categoryId,
+      date: body.date,
+      type: body.type,
     });
 
     await newTransaction.save();
@@ -66,7 +68,7 @@ export const deleteTransaction = async (req, res, next) => {
       { isDeleted: true }
     );
 
-    if (transaction.nModified == 0) {
+    if (transaction.matchedCount == 0) {
       return res.status(404).json({
         message: `Transaction with id ${id} not found or already deleted.`,
       });
@@ -96,12 +98,13 @@ export const updateTransaction = async (req, res, next) => {
 
     const transaction = await TransactionModel.updateOne(
       { _id: id, isDeleted: false },
-      { $set: updatedBody }
+      { $set: updatedBody },
+      { runValidators: true }
     );
 
-    if (transaction.nModified == 0) {
+    if (transaction.matchedCount == 0) {
       return res.status(404).json({
-        message: `Transaction with id ${id} not found or already updated.`,
+        message: `Transaction with id ${id} not found.`,
       });
     }
 

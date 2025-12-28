@@ -14,4 +14,4 @@ const categorySchema = new Schema(
   { timestamps: true }
 );
 
-export const CategoryModel = model(categorySchema, "category");
+export const CategoryModel = model("category", categorySchema);

@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
-import { category } from "./category.model";
+import mongoose, { Schema } from "mongoose";
 
-const budgetSchema = new mongoose.Schema(
+const budgetSchema: Schema = new mongoose.Schema(
   {
     category: {
       type: mongoose.Schema.Types.ObjectId,
@@ -25,7 +24,7 @@ const budgetSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const BudgetModel = mongoose.model(budgetSchema, "budget");
+export const BudgetModel = mongoose.model("budget", budgetSchema);
 
 // To ensure the amountSpent in the Budget schema is automatically updated based on user transactions, we can set up a system where:
 // Every time a new transaction is added, the app checks if there's an active budget for that category.

@@ -65,4 +65,27 @@ export const deleteCategory = async (req, res, next) => {
   }
 };
 
-// export const updateCategory = async (req, res, )
+export const updateCategory = async (req, res, next) => {
+  try {
+    const categoryId = req.params.id;
+    let updatedBody = req.body;
+
+    const updatedCategory = await CategoryModel.updateOne(
+      { _id: categoryId },
+      { $set: updatedBody },
+      { runValidators: true }
+    );
+
+    if (updatedCategory.matchedCount == 0) {
+      return res
+        .status(404)
+        .json({ message: `Category with id ${categoryId} not found.` });
+    }
+
+    res
+      .status(200)
+      .json({ message: `Category with id ${categoryId} updated.` });
+  } catch (error) {
+    next({ msg: error.message });
+  }
+};

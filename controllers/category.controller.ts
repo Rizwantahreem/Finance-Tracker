@@ -1,6 +1,10 @@
 import type { NextFunction } from "express";
 import { CategoryModel } from "../models/category.model.js";
 import type { DeleteResult } from "mongoose";
+import {
+  CategorySchema,
+  UpdateCategorySchema,
+} from "../validators/category.validator.js";
 
 export const createCategory = async (
   req: any,
@@ -9,12 +13,13 @@ export const createCategory = async (
 ) => {
   try {
     if (!req.body) return res.status(400).json({ message: "Invalid body" });
+    const body = CategorySchema.parse(req.body);
 
     const newCategory = new CategoryModel({
-      name: req.body.name,
-      type: req.body.type,
+      name: body.name,
+      type: body.type,
       userID: req?.user?.id || null,
-      description: req.body.description,
+      description: body.description,
     });
 
     await newCategory.save();
@@ -23,7 +28,6 @@ export const createCategory = async (
       .status(201)
       .json({ message: `Category with id ${newCategory._id} created` });
   } catch (error) {
-    console.log(error, "aaaaaaaa");
     next({ msg: error.message });
   }
 };
@@ -68,7 +72,7 @@ export const deleteCategory = async (req, res, next) => {
 export const updateCategory = async (req, res, next) => {
   try {
     const categoryId = req.params.id;
-    let updatedBody = req.body;
+    let updatedBody = UpdateCategorySchema.parse(req.body);
 
     const updatedCategory = await CategoryModel.updateOne(
       { _id: categoryId },

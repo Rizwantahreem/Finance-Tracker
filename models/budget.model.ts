@@ -7,15 +7,16 @@ const budgetSchema: Schema = new mongoose.Schema(
       required: true,
       ref: "category",
     },
-    userID: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "user",
     },
-    amountSet: { type: Number, min: 0, required: true },
-    amountSpent: { type: Number, min: 0, required: true },
-    startgDate: { type: Date, required: true },
+    budgetAmount: { type: Number, min: 0, required: true },
+    spentAmount: { type: Number, min: 0, required: true },
+    startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
+    isDeleted: { type: Boolean, required: true, default: false },
     isCompleted: {
       type: Boolean,
       default: false, // Whether the budget period is over and the goal has been reached

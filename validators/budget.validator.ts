@@ -4,11 +4,9 @@ export const BudgetSchema = z.object({
   category: z.string(),
   userId: z.string(),
   budgetAmount: z.coerce.number().int().min(0),
-  spentAmount: z.coerce.number().int().min(0),
-  startDate: z.coerce.date(),
-  endDate: z.coerce.date(),
+  month: z.coerce.number(),
+  year: z.coerce.number(),
   isDeleted: z.coerce.boolean().default(false),
-  isCompleted: z.boolean().default(false),
 });
 
 export const UpdateBudgetSchema = BudgetSchema.omit({ userId: true })

@@ -11,10 +11,9 @@ export const createBudget = async (req, res, next) => {
 
     const budget = new BudgetModel({
       budgetAmount: body.budgetAmount,
-      spentAmount: body.spentAmount,
       userId: body.userId,
-      startDate: body.startDate,
-      endDate: body.endDate,
+      month: body.month,
+      year: body.year,
       category: body.category,
     });
 

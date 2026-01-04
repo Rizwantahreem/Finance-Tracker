@@ -1,3 +1,4 @@
+import type { NextFunction } from "express";
 import mongoose, { Schema } from "mongoose";
 
 const budgetSchema: Schema = new mongoose.Schema(
@@ -13,21 +14,39 @@ const budgetSchema: Schema = new mongoose.Schema(
       ref: "user",
     },
     budgetAmount: { type: Number, min: 0, required: true },
-    spentAmount: { type: Number, min: 0, required: true },
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true },
+    month: { type: Number, required: true },
+    year: { type: Number, required: true },
     isDeleted: { type: Boolean, required: true, default: false },
-    isCompleted: {
-      type: Boolean,
-      default: false, // Whether the budget period is over and the goal has been reached
-    },
   },
   { timestamps: true }
 );
 
-export const BudgetModel = mongoose.model("budget", budgetSchema);
+budgetSchema.pre("save", async function () {
+  const Category = mongoose.models.category;
+  const Budget = mongoose.models.budget;
 
-// To ensure the amountSpent in the Budget schema is automatically updated based on user transactions, we can set up a system where:
-// Every time a new transaction is added, the app checks if there's an active budget for that category.
-// If there is an active budget, it updates the amountSpent for that budget.
-// If the user deletes or updates a transaction, the app re-calculates the amountSpent accordingly.
+  if (!Category) {
+    throw new Error("Category model is not registered");
+  }
+
+  const category = await Category.findById(this.category);
+
+  if (!category || category.type !== "expense") {
+    throw new Error("Budget can only be created for expense categories");
+  }
+
+  const exists = await Budget.findOne({
+    userId: this.userId,
+    category: this.category,
+    month: this.month,
+    year: this.year,
+    isDeleted: false,
+    _id: { $ne: this._id },
+  });
+
+  if (exists) {
+    throw new Error("Budget already exists for this category and month");
+  }
+});
+
+export const BudgetModel = mongoose.model("budget", budgetSchema);

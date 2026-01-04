@@ -8,6 +8,7 @@ import { verifyToken } from "./middlewares/auth.middleware.js";
 import { startServer } from "./config/DbConnection.js";
 import transactionRouter from "./routers/transaction.router.js";
 import budgetRouter from "./routers/budget.router.js";
+import analyticRouter from "./routers/analytics.router.js";
 
 const app = express();
 const port = process.env.Port || 5000;
@@ -23,5 +24,6 @@ app.use("/api/transaction", verifyToken, transactionRouter);
 app.use("/api/user", userRouter);
 app.use("/api/category", verifyToken, categoryRouter);
 app.use("/api/budget", verifyToken, budgetRouter);
+app.use("/api/dashboard", verifyToken, analyticRouter);
 
 app.use(errorLogger);

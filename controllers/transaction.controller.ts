@@ -1,5 +1,9 @@
 import { TransactionModel } from "../models/transaction.model.js";
 import mongoose from "mongoose";
+import {
+  TransactionSchema,
+  UpdateTransactionSchema,
+} from "../validators/transaction.validator.js";
 
 // @Desc - Get alltransaction
 export const getTransactions = async (req, res, next) => {
@@ -22,7 +26,9 @@ export const getTransaction = async (req, res, next) => {
   if (!id) return res.status(400).json({ messaeg: "Invalid ID." });
 
   try {
-    const transaction = await TransactionModel.findById({ _id: id });
+    const transaction = await TransactionModel.findById({
+      _id: id,
+    });
 
     if (!transaction)
       return res.status(404).json({ message: "No transaction found" });
@@ -36,14 +42,15 @@ export const getTransaction = async (req, res, next) => {
 // @Desc - Post Create transaction
 export const createTransaction = async (req, res, next) => {
   try {
-    const body = req.body;
+    const body = TransactionSchema.parse(req.body);
+
     const newTransaction = new TransactionModel({
       amount: body.amount,
       description: body?.description || "",
-      userId: req.user.id,
-      category: body.categoryId,
-      date: body.date,
       type: body.type,
+      userId: req?.user?.id,
+      category: body.categoryId,
+      transactiondate: body.transactiondate,
     });
 
     await newTransaction.save();
@@ -51,6 +58,7 @@ export const createTransaction = async (req, res, next) => {
       message: `transaction with id ${newTransaction._id} created successfully`,
     });
   } catch (error) {
+    console.log(error, "aaaa");
     next({ msg: error.message, status: 500 });
   }
 };
@@ -82,23 +90,19 @@ export const deleteTransaction = async (req, res, next) => {
   }
 };
 
+// @Desc - Patch request
 export const updateTransaction = async (req, res, next) => {
-  const body = req.body;
-  const id = req.params.id;
-
-  if (!id || !body || !mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: "Invalid ID" });
-  }
-
   try {
-    let updatedBody = {};
-    Object.entries(body).forEach(([key, value]) => {
-      updatedBody[key] = value;
-    });
+    const body = UpdateTransactionSchema.parse(req.body);
+    const id = req.params.id;
+
+    if (!id || !body || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid value(s)" });
+    }
 
     const transaction = await TransactionModel.updateOne(
       { _id: id, isDeleted: false },
-      { $set: updatedBody },
+      { $set: body },
       { runValidators: true }
     );
 

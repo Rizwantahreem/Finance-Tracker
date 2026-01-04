@@ -2,14 +2,16 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserModel } from "../models/user.model.js";
 import { getUserByEmail } from "../services/user.service.js";
+import { SignInSchema, UserSchema } from "../validators/user.validator.js";
 
 export const signUp = async (req, res, next) => {
-  let body = req.body;
-  if (!body || Object.entries(body).length == 0) {
-    return res.status(400).json({ messaage: "Invalid request." });
-  }
-
   try {
+    let body = UserSchema.parse(req.body);
+
+    if (!body || Object.entries(body).length == 0) {
+      return res.status(400).json({ messaage: "Invalid request." });
+    }
+
     const encryptedPassword = await bcrypt.hash(body.password, 12);
     const user = await UserModel.create({
       name: body.name,
@@ -28,10 +30,10 @@ export const signUp = async (req, res, next) => {
 };
 
 export const signIn = async (req, res, next) => {
-  const body = req.body;
-
   try {
+    const body = SignInSchema.parse(req.body);
     const user = await getUserByEmail(body.email);
+
     if (!user) return res.status(404).json({ message: "user not found" });
 
     const isPassMatched = await bcrypt.compare(body.password, user.password);
@@ -54,7 +56,6 @@ export const signIn = async (req, res, next) => {
     );
 
     res.cookie("token", signedToken, {
-      httpOnly: true,
       httpOnly: true,
       sameSite: "strict", // CSRF protection
       maxAge: 5 * 60 * 60 * 1000,

@@ -1,8 +1,38 @@
-import mongoose, { Aggregate } from "mongoose";
+import mongoose from "mongoose";
 import { TransactionModel } from "../models/transaction.model.js";
 import { getEndOfMonth, getStartOfMonth } from "../utils/date.util.js";
+import type { ISummary } from "../constants/dashboard.interface.js";
+import {
+  getHighlySpentCategory,
+  getSavingAndExpenses,
+} from "../services/dashboard.service.js";
 
-export const getSummary = async (req, res, next) => {};
+export const getSummary = async (req, res, next) => {
+  const summary: ISummary = {
+    totalSavings: 0,
+    totalExpenses: 0,
+    highlySpentCategory: "",
+    budgetToExpenseTracking: 0,
+  };
+  try {
+    const now = new Date();
+
+    const totalTypesSum = await getSavingAndExpenses(now, req?.user?.id);
+    const highlySpentCategory = await getHighlySpentCategory(
+      now,
+      req?.user?.id
+    );
+
+    summary.totalSavings =
+      totalTypesSum[0]?.totalAmount - totalTypesSum[1]?.totalAmount;
+    summary.totalExpenses = totalTypesSum[1]?.totalAmount;
+    summary.highlySpentCategory = highlySpentCategory[0]?.categoryName;
+
+    res.json({ summary, message: "Monthly summary fetched." });
+  } catch (error) {
+    next({ msg: error.message });
+  }
+};
 
 export const getDetailedMonthlyExpenses = async (req, res, next) => {
   try {
@@ -12,10 +42,9 @@ export const getDetailedMonthlyExpenses = async (req, res, next) => {
     const endOfMonth = getEndOfMonth(now);
 
     const transactions = await TransactionModel.aggregate([
-      //   filter
       {
         $match: {
-          userId: new mongoose.Types.ObjectId(req?.user?.id),
+          userId: new mongoose.Types.ObjectId(req.user.id),
           isDeleted: false,
           transactionDate: {
             $gte: startOfMonth,
@@ -23,27 +52,21 @@ export const getDetailedMonthlyExpenses = async (req, res, next) => {
           },
         },
       },
-      // group
       {
         $group: {
           _id: "$category",
           totalAmount: { $sum: "$amount" },
         },
       },
-      // Join Category collection
       {
         $lookup: {
-          from: "$categories", // it's collection name
-          localField: "category",
+          from: "categories",
+          localField: "_id",
           foreignField: "_id",
           as: "category",
         },
       },
-      //   flatten category array
-      {
-        $unwind: "$category",
-      },
-      //   shape response
+      { $unwind: "$category" },
       {
         $project: {
           _id: 0,

@@ -42,15 +42,18 @@ export const getTransaction = async (req, res, next) => {
 // @Desc - Post Create transaction
 export const createTransaction = async (req, res, next) => {
   try {
-    const body = TransactionSchema.parse(req.body);
+    const body = TransactionSchema.parse({
+      ...req.body,
+      userId: req?.user?.id,
+    });
 
     const newTransaction = new TransactionModel({
-      amount: body.amount,
+      amount: body?.amount,
       description: body?.description || "",
-      type: body.type,
-      userId: req?.user?.id,
-      category: body.categoryId,
-      transactiondate: body.transactiondate,
+      type: body?.type,
+      userId: body?.userId,
+      category: body?.categoryId,
+      transactionDate: body?.transactionDate,
     });
 
     await newTransaction.save();
@@ -58,7 +61,6 @@ export const createTransaction = async (req, res, next) => {
       message: `transaction with id ${newTransaction._id} created successfully`,
     });
   } catch (error) {
-    console.log(error, "aaaa");
     next({ msg: error.message, status: 500 });
   }
 };

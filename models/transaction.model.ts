@@ -8,7 +8,9 @@ const transactionSchema = new Schema(
     isDeleted: { type: Boolean, required: false, default: false },
     category: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
+      required: function () {
+        return this.type === "expense";
+      },
       ref: "category",
     },
     userId: {
@@ -16,7 +18,7 @@ const transactionSchema = new Schema(
       required: true,
       ref: "user",
     },
-    transactiondate: { type: Date, required: false, default: Date.now },
+    transactionDate: { type: Date, required: false, default: Date.now },
   },
   { timestamps: true }
 );

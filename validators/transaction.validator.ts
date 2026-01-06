@@ -1,21 +1,42 @@
 import { z } from "zod";
-import { CategoryTypeEnum } from "./category.validator.js";
 
-export const TransactionSchema = z.object({
-  amount: z.coerce.number().max(99999999).min(0),
+export const ExpenseTransactionSchema = z.object({
+  amount: z.coerce.number().min(0).max(99999999),
   description: z.string().optional(),
-  type: CategoryTypeEnum,
-  isDeleted: z.boolean().optional().default(false),
-  categoryId: z.string(),
-  userId: z.string()?.optional(),
-  transactiondate: z.coerce.date().default(() => new Date()), // by default functions are lazy loaded in zod
+  type: z.literal("expense"),
+  categoryId: z.string(), // REQUIRED
+  userId: z.string(),
+  isDeleted: z.boolean()?.default(false),
+  transactionDate: z.coerce.date().default(() => new Date()),
 });
 
-export const UpdateTransactionSchema = TransactionSchema.omit({
-  isDeleted: true,
+export const IncomeTransactionSchema = z.object({
+  amount: z.coerce.number().min(0).max(99999999),
+  description: z.string().optional(),
+  type: z.literal("income"),
+  isDeleted: z.boolean()?.default(false),
+  categoryId: z.undefined().optional(), // NOT allowed
+  userId: z.string(),
+  transactionDate: z.coerce.date().default(() => new Date()),
+});
+
+export const TransactionSchema = z.discriminatedUnion("type", [
+  ExpenseTransactionSchema,
+  IncomeTransactionSchema,
+]);
+
+const UpdateExpenseTransactionSchema = ExpenseTransactionSchema.omit({
   userId: true,
-})
-  .partial()
+  isDeleted: true,
+}).partial();
+
+const UpdateIncomeTransactionSchema = IncomeTransactionSchema.omit({
+  userId: true,
+  isDeleted: true,
+}).partial();
+
+export const UpdateTransactionSchema = z
+  .union([UpdateExpenseTransactionSchema, UpdateIncomeTransactionSchema])
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided",
   });

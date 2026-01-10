@@ -1,10 +1,14 @@
-import mongoose from "mongoose";
 import { TransactionModel } from "../models/transaction.model.js";
-import { getEndOfMonth, getStartOfMonth } from "../utils/date.util.js";
 import type { ISummary } from "../constants/dashboard.interface.js";
 import {
+  getBudgetToSpendingTrack,
   getHighlySpentCategory,
   getSavingAndExpenses,
+  getUnbudgetedSpending,
+  getUnusedBudget,
+  getDetailedExpenses,
+  getBudgetAndTransactionByCategoryData,
+  getLatestTransaction,
 } from "../services/dashboard.service.js";
 
 export const getSummary = async (req, res, next) => {
@@ -12,21 +16,39 @@ export const getSummary = async (req, res, next) => {
     totalSavings: 0,
     totalExpenses: 0,
     highlySpentCategory: "",
-    budgetToExpenseTracking: 0,
+    budgetToExpenseTracking: "0",
+    unbudgetedSpending: 0,
+    unUsedBudget: 0,
   };
+
   try {
     const now = new Date();
+    const userId = req?.user?.id;
 
-    const totalTypesSum = await getSavingAndExpenses(now, req?.user?.id);
-    const highlySpentCategory = await getHighlySpentCategory(
+    const totalTypesSum = await getSavingAndExpenses(now, userId, next);
+    const highlySpentCategory = await getHighlySpentCategory(now, userId, next);
+    const budgetToTransaction = await getBudgetToSpendingTrack(
       now,
-      req?.user?.id
+      userId,
+      next
     );
+
+    const unbudgetedSpending = await getUnbudgetedSpending(now, userId, next);
+
+    const unUsedBudget = await getUnusedBudget(now, userId, next);
 
     summary.totalSavings =
       totalTypesSum[0]?.totalAmount - totalTypesSum[1]?.totalAmount;
+
     summary.totalExpenses = totalTypesSum[1]?.totalAmount;
     summary.highlySpentCategory = highlySpentCategory[0]?.categoryName;
+
+    summary.budgetToExpenseTracking = `${
+      budgetToTransaction?.utilizationSign
+    }${budgetToTransaction?.utilizationPercentage.toFixed(2)}`;
+
+    summary.unbudgetedSpending = unbudgetedSpending;
+    summary.unUsedBudget = unUsedBudget;
 
     res.json({ summary, message: "Monthly summary fetched." });
   } catch (error) {
@@ -36,46 +58,9 @@ export const getSummary = async (req, res, next) => {
 
 export const getDetailedMonthlyExpenses = async (req, res, next) => {
   try {
-    const now = new Date();
+    const time = new Date();
 
-    const startOfMonth = getStartOfMonth(now);
-    const endOfMonth = getEndOfMonth(now);
-
-    const transactions = await TransactionModel.aggregate([
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(req.user.id),
-          isDeleted: false,
-          transactionDate: {
-            $gte: startOfMonth,
-            $lte: endOfMonth,
-          },
-        },
-      },
-      {
-        $group: {
-          _id: "$category",
-          totalAmount: { $sum: "$amount" },
-        },
-      },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "_id",
-          foreignField: "_id",
-          as: "category",
-        },
-      },
-      { $unwind: "$category" },
-      {
-        $project: {
-          _id: 0,
-          categoryId: "$category._id",
-          categoryName: "$category.name",
-          totalAmount: 1,
-        },
-      },
-    ]);
+    const transactions = await getDetailedExpenses(time, req?.user?.id, next);
 
     res.json({ message: "fetched this month expenses", transactions });
   } catch (error) {
@@ -83,14 +68,27 @@ export const getDetailedMonthlyExpenses = async (req, res, next) => {
   }
 };
 
-export const getexpenseToBudgetComparison = async (req, res, next) => {};
+export const getBudgetAndTransactionByCategory = async (req, res, next) => {
+  try {
+    const budgetAndTransactionData =
+      await getBudgetAndTransactionByCategoryData(
+        new Date(),
+        req?.user?.id,
+        next
+      );
+
+    res.json({
+      message: "Fetched budget and transaction data.",
+      budgetAndTransactionData,
+    });
+  } catch (error) {
+    next({ msg: error?.message });
+  }
+};
 
 export const getRecentTransactions = async (req, res, next) => {
   try {
-    const transactions = await TransactionModel.find({
-      userId: req.user.id,
-      isDeleted: false,
-    }).sort({ CreatedAt: -1 });
+    const transactions = await getLatestTransaction(req?.user?.id, next);
 
     res.status(200).json({
       message: "fetched recent transactions successfully",

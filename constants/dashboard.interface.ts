@@ -2,5 +2,7 @@ export interface ISummary {
   totalSavings: number;
   totalExpenses: number;
   highlySpentCategory: string;
-  budgetToExpenseTracking: number;
+  budgetToExpenseTracking: string;
+  unbudgetedSpending: number;
+  unUsedBudget: number;
 }

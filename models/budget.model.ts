@@ -1,4 +1,3 @@
-import type { NextFunction } from "express";
 import mongoose, { Schema } from "mongoose";
 
 const budgetSchema: Schema = new mongoose.Schema(

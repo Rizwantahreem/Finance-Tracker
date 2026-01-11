@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import rateLimit from "express-rate-limit"; // precention from DDOS & brute-force
 import helmet from "helmet"; // for security
+import { config } from "../config/env.js";
 
 export const setSecurityMiddlewares = (app: Express) => {
   app.use(helmet()); // prenvention from XSS, clickjacking & sniffing and unsafe framing
@@ -20,7 +21,7 @@ export const setSecurityMiddlewares = (app: Express) => {
     cors({
       Credential: true,
       methods: ["GET", "PATCH", "POST", "DELETE"],
-      origin: process.env.CORS_ORIGIN.split(","),
+      origin: config.CORS_ORIGIN.split(","),
     })
   );
   app.use(express.json({ limit: "100kb" }));

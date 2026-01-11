@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { config } from "../config/env.js";
 
 export const verifyToken = async (req, res, next) => {
   let token = req.headers.authorization || req.headers.Authorization;
@@ -8,7 +9,7 @@ export const verifyToken = async (req, res, next) => {
 
   token = token?.split(" ")[1];
   try {
-    const decodedUser = await jwt.verify(token, process.env.SECRET_KEY);
+    const decodedUser = await jwt.verify(token, config.SECRET_KEY);
     req.user = decodedUser;
     next();
   } catch (error) {

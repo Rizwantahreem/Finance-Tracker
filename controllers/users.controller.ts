@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { UserModel } from "../models/user.model.js";
 import { getUserByEmail } from "../services/user.service.js";
 import { SignInSchema, UserSchema } from "../validators/user.validator.js";
+import { config } from "../config/env.js";
 
 export const signUp = async (req, res, next) => {
   try {
@@ -48,10 +49,10 @@ export const signIn = async (req, res, next) => {
         role: user.role,
         id: user._id,
       },
-      process.env.SECRET_KEY,
+      config.SECRET_KEY,
       {
         expiresIn: "5h",
-        algorithm: process.env.ENC_ALGO,
+        algorithm: config.ENC_ALGO,
       }
     );
 

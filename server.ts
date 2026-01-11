@@ -12,7 +12,7 @@ import budgetRouter from "./routers/budget.router.js";
 import analyticRouter from "./routers/analytics.router.js";
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = config.PORT || 5000;
 
 startServer(app, port);
 setSecurityMiddlewares(app);

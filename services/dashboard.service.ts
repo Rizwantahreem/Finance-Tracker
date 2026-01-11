@@ -1,14 +1,9 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 import { TransactionModel } from "../models/transaction.model.js";
 import { getStartOfMonth, getEndOfMonth } from "../utils/date.util.js";
 import { BudgetModel } from "../models/budget.model.js";
-import type { NextFunction } from "express";
 
-export async function getSavingAndExpenses(
-  currentdate: Date,
-  userId: string,
-  next: NextFunction
-) {
+export async function getSavingAndExpenses(currentdate: Date, userId: string) {
   try {
     const totalTypesSum = await TransactionModel.aggregate([
       {
@@ -43,14 +38,13 @@ export async function getSavingAndExpenses(
 
     return totalTypesSum;
   } catch (error) {
-    next({ msg: error.message });
+    throw error;
   }
 }
 
 export async function getHighlySpentCategory(
   currentDate: Date,
-  userId: string,
-  next: NextFunction
+  userId: string
 ) {
   try {
     const highlySpentCategory = await TransactionModel.aggregate([
@@ -96,14 +90,13 @@ export async function getHighlySpentCategory(
 
     return highlySpentCategory;
   } catch (error) {
-    next({ msg: error?.message });
+    throw error;
   }
 }
 
 export async function getBudgetToSpendingTrack(
   currentDate: Date,
-  userId: string,
-  next: NextFunction
+  userId: string
 ) {
   try {
     const startOfMonth = getStartOfMonth(currentDate);
@@ -189,15 +182,11 @@ export async function getBudgetToSpendingTrack(
 
     return result[0] || 0;
   } catch (error) {
-    next({ msg: error.message });
+    throw error;
   }
 }
 
-export async function getUnbudgetedSpending(
-  currentDate: Date,
-  userId: string,
-  next: NextFunction
-) {
+export async function getUnbudgetedSpending(currentDate: Date, userId: string) {
   try {
     const UnbudgetedSpendingOfCategories = await TransactionModel.aggregate([
       {
@@ -269,15 +258,11 @@ export async function getUnbudgetedSpending(
 
     return unBudgetedSpending;
   } catch (error) {
-    next({ msg: error?.message });
+    throw error;
   }
 }
 
-export async function getUnusedBudget(
-  currentDate: Date,
-  userId: string,
-  next: NextFunction
-) {
+export async function getUnusedBudget(currentDate: Date, userId: string) {
   try {
     const budget = await BudgetModel.aggregate([
       // 1️⃣ Match budgets for this month
@@ -367,15 +352,11 @@ export async function getUnusedBudget(
 
     return unusedBudgetAmount;
   } catch (error) {
-    next({ msg: error.message });
+    throw error;
   }
 }
 
-export async function getDetailedExpenses(
-  currentDate: Date,
-  userId: string,
-  next: NextFunction
-) {
+export async function getDetailedExpenses(currentDate: Date, userId: string) {
   try {
     const startOfMonth = getStartOfMonth(currentDate);
     const endOfMonth = getEndOfMonth(currentDate);
@@ -419,14 +400,13 @@ export async function getDetailedExpenses(
 
     return transactions;
   } catch (error) {
-    next({ msg: error.message });
+    throw error;
   }
 }
 
 export async function getBudgetAndTransactionByCategoryData(
   currentDate: Date,
-  userId: string,
-  next: NextFunction
+  userId: string
 ) {
   try {
     const data = await BudgetModel.aggregate([
@@ -483,14 +463,7 @@ export async function getBudgetAndTransactionByCategoryData(
           transactionSum: { $first: "$transactionSum" },
         },
       },
-      // { $unwind: "$transaction" },
-      // {
-      //   $group: {
-      //     _id: "$category",
-      //     budgetSum: { $sum: "$budgetAmount" },
-      //     transactionSum: { $sum: "$transaction.amount" },
-      //   },
-      // },
+
       {
         $lookup: {
           from: "categories",
@@ -521,17 +494,13 @@ export async function getBudgetAndTransactionByCategoryData(
       },
     ]);
 
-    console.log(data, "ttt");
-
-    // for (const obj in data) {
-    //   console.log(...obj, "aaaaa");
-    // }
+    return data;
   } catch (error) {
-    next({ msg: error?.message });
+    throw error;
   }
 }
 
-export async function getLatestTransaction(userId: string, next: NextFunction) {
+export async function getLatestTransaction(userId: string) {
   try {
     const transactions = await TransactionModel.aggregate([
       {
@@ -579,6 +548,6 @@ export async function getLatestTransaction(userId: string, next: NextFunction) {
 
     return transactions;
   } catch (error) {
-    next({ msg: error.message });
+    throw error;
   }
 }

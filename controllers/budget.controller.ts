@@ -1,13 +1,25 @@
+import type { Request, Response, NextFunction } from "express";
 import { BudgetModel } from "../models/budget.model.js";
 import {
   BudgetSchema,
   UpdateBudgetSchema,
 } from "../validators/budget.validator.js";
+import { AppError } from "../utils/AppError.js";
+import { ZodError } from "zod";
 
 // @DESC - POST create new budget
-export const createBudget = async (req, res, next) => {
+export const createBudget = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const body = BudgetSchema.parse({ ...req.body, userId: req?.user?.id });
+    if (!req.user?.id) {
+      next(new AppError("User not authenticated", 401));
+      return;
+    }
+
+    const body = BudgetSchema.parse({ ...req.body, userId: req.user.id });
 
     const budget = new BudgetModel({
       budgetAmount: body.budgetAmount,
@@ -21,19 +33,28 @@ export const createBudget = async (req, res, next) => {
 
     res.status(201).json({ message: `Budget with id ${budget._id} created.` });
   } catch (error) {
-    next({ msg: error.message });
+    if (error instanceof ZodError) {
+      next(new AppError("Validation failed", 400));
+      return;
+    }
+    next(error);
   }
 };
 
 // @DESC - update the budget
 // route - PATCH: '/:id'
-export const updateBudget = async (req, res, next) => {
+export const updateBudget = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const id = req.params.id;
     const body = UpdateBudgetSchema.parse(req.body);
 
     if (!id || !body) {
-      next({ status: 400, msg: "Invalid data." });
+      next(new AppError("Invalid data.", 400));
+      return;
     }
 
     const budget = await BudgetModel.updateOne(
@@ -42,18 +63,27 @@ export const updateBudget = async (req, res, next) => {
       { runValidators: true }
     );
 
-    if (budget.matchedCount == 0) {
-      next({ status: 404, msg: `Budget with id ${id} not found.` });
+    if (budget.matchedCount === 0) {
+      next(new AppError(`Budget with id ${id} not found.`, 404));
+      return;
     }
 
     res.status(200).json({ message: `Budget with id ${id} updated.` });
   } catch (error) {
-    next({ msg: error.message });
+    if (error instanceof ZodError) {
+      next(new AppError("Validation failed", 400));
+      return;
+    }
+    next(error);
   }
 };
 
 // @DESC - DELETE: soft delete the budget
-export const deleteBudget = async (req, res, next) => {
+export const deleteBudget = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const id = req.params.id;
 
@@ -62,36 +92,54 @@ export const deleteBudget = async (req, res, next) => {
       { $set: { isDeleted: true } }
     );
 
-    if (deletedBudget.matchedCount == 0) {
-      next({ status: 404, msg: `Budget with id ${id} not found.` });
+    if (deletedBudget.matchedCount === 0) {
+      next(new AppError(`Budget with id ${id} not found.`, 404));
+      return;
     }
 
     res.status(200).json({ message: `Budget with id ${id} deleted.` });
   } catch (error) {
-    next({ msg: error.message });
+    next(error);
   }
 };
 
 // @DESC - get budget
 // route -  GET: '/:id'
-export const getBudget = async (req, res, next) => {
+export const getBudget = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const id = req.params.id;
     const budget = await BudgetModel.findOne({ _id: id });
 
     res.status(200).json({ message: `Budget with id ${id} found.`, budget });
   } catch (error) {
-    next({ msg: error.message });
+    next(error);
   }
 };
 
 // @DESC - get all budgets
-export const getBudgets = async (req, res, next) => {
+export const getBudgets = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const budget = await BudgetModel.find({ isDeleted: false });
+    const budget = await BudgetModel.find(
+      { isDeleted: false },
+      {
+        _id: 1,
+        category: 1,
+        budgetAmount: 1,
+        month: 1,
+        year: 1,
+      }
+    );
 
     res.status(200).json({ message: `Budgets found.`, budget });
   } catch (error) {
-    next({ msg: error.message });
+    next(error);
   }
 };

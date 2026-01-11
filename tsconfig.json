@@ -8,6 +8,7 @@
 
     "allowJs": true,
     "checkJs": false,
+    "typeRoots": ["./node_modules/@types", "./types"],
 
     "types": ["node"],
     "esModuleInterop": true,
@@ -21,6 +22,8 @@
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
 
-    "strict": false
+    "strict": true,
+    "noImplicitAny": true,  
+    "strictNullChecks": true 
   }
 }

@@ -6,7 +6,7 @@ import {
   deleteTransaction,
   updateTransaction,
 } from "../controllers/transaction.controller.js";
-import { authorizeUser } from "../middlewares/roll-based-access.middleware.js";
+import { authorizeUser } from "../middlewares/role-based-access.middleware.js";
 
 const transactionRouter = Router();
 

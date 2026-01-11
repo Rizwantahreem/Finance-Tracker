@@ -1,17 +1,12 @@
 import mongoose from "mongoose";
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { ServerApiVersion } from "mongodb";
+import type { Express } from "express";
 import { config } from "./env.js";
 
-const client = new MongoClient(config.CONNECTION_STRING, {
-  serverSelectionTimeoutMS: 30000, // Set timeout to 30 seconds
-  socketTimeoutMS: 45000, // Set socket timeout to 45 seconds
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-  },
-});
-
-export const startServer = async (app, port) => {
+export const startServer = async (
+  app: Express,
+  port: number
+): Promise<void> => {
   try {
     await mongoose.connect(config.CONNECTION_STRING, {
       serverSelectionTimeoutMS: 30000, // Set timeout to 30 seconds
@@ -28,7 +23,9 @@ export const startServer = async (app, port) => {
       console.log(`Server running on port ${port}`);
     });
   } catch (error) {
-    console.error("Application start-up fail", error.message);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error("Application start-up fail", errorMessage);
     process.exit(1);
   }
 };

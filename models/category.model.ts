@@ -4,7 +4,7 @@ const categorySchema = new Schema(
   {
     name: { type: String, required: true, minlength: 3, maxLength: 100 },
     type: { type: String, required: true, enum: ["expense", "income"] },
-    userID: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       required: false,
       ref: "user",

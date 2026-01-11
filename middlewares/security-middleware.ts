@@ -13,7 +13,7 @@ export const setSecurityMiddlewares = (app: Express) => {
     standardHeaders: true,
     legacyHeaders: false,
     windowMs: 15 * 60 * 1000,
-    max: 8,
+    max: 10,
   });
   app.use(limiterOptions);
 

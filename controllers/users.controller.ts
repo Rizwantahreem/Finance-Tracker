@@ -1,16 +1,24 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import type { Request, Response, NextFunction } from "express";
 import { UserModel } from "../models/user.model.js";
 import { getUserByEmail } from "../services/user.service.js";
 import { SignInSchema, UserSchema } from "../validators/user.validator.js";
 import { config } from "../config/env.js";
+import { AppError } from "../utils/AppError.js";
+import { ZodError } from "zod";
 
-export const signUp = async (req, res, next) => {
+export const signUp = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    let body = UserSchema.parse(req.body);
+    const body = UserSchema.parse(req.body);
 
-    if (!body || Object.entries(body).length == 0) {
-      return res.status(400).json({ messaage: "Invalid request." });
+    if (!body || Object.entries(body).length === 0) {
+      next(new AppError("Invalid request.", 400));
+      return;
     }
 
     const encryptedPassword = await bcrypt.hash(body.password, 12);
@@ -25,21 +33,35 @@ export const signUp = async (req, res, next) => {
 
     res.status(201).json({ message: `user with id ${user._id} created.` });
   } catch (error) {
-    console.log(error, "err");
-    next({ msg: error.messaage });
+    console.error(error);
+    if (error instanceof ZodError) {
+      next(new AppError("Validation failed", 400));
+      return;
+    }
+
+    next(error);
   }
 };
 
-export const signIn = async (req, res, next) => {
+export const signIn = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const body = SignInSchema.parse(req.body);
     const user = await getUserByEmail(body.email);
 
-    if (!user) return res.status(404).json({ message: "user not found" });
+    if (!user) {
+      next(new AppError("User not found", 404));
+      return;
+    }
 
     const isPassMatched = await bcrypt.compare(body.password, user.password);
-    if (!isPassMatched)
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!isPassMatched) {
+      next(new AppError("Invalid credentials", 400));
+      return;
+    }
 
     const signedToken = jwt.sign(
       {
@@ -47,12 +69,12 @@ export const signIn = async (req, res, next) => {
         age: user.age,
         name: user.name,
         role: user.role,
-        id: user._id,
+        id: user._id.toString(),
       },
       config.SECRET_KEY,
       {
         expiresIn: "5h",
-        algorithm: config.ENC_ALGO,
+        algorithm: config.ENC_ALGO as jwt.Algorithm,
       }
     );
 
@@ -63,6 +85,10 @@ export const signIn = async (req, res, next) => {
     });
     res.status(200).json({ message: "log in successful" });
   } catch (error) {
-    next({ msg: error.message });
+    if (error instanceof ZodError) {
+      next(new AppError("Validation failed", 400));
+      return;
+    }
+    next(error);
   }
 };

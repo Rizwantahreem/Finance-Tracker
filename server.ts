@@ -1,5 +1,5 @@
 import { config } from "./config/env.js";
-import express from "express";
+import express, { type Express } from "express";
 import userRouter from "./routers/users.router.js";
 import { setSecurityMiddlewares } from "./middlewares/security-middleware.js";
 import { notFound } from "./middlewares/not-found.middleware.js";
@@ -11,8 +11,8 @@ import transactionRouter from "./routers/transaction.router.js";
 import budgetRouter from "./routers/budget.router.js";
 import analyticRouter from "./routers/analytics.router.js";
 
-const app = express();
-const port = config.PORT || 5000;
+const app: Express = express();
+const port: number = config.PORT || 5000;
 
 startServer(app, port);
 setSecurityMiddlewares(app);

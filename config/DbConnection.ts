@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import { MongoClient, ServerApiVersion } from "mongodb";
+import { config } from "./env.js";
 
-const client = new MongoClient(process.env.CONNECTION_STRING, {
+const client = new MongoClient(config.CONNECTION_STRING, {
   serverSelectionTimeoutMS: 30000, // Set timeout to 30 seconds
   socketTimeoutMS: 45000, // Set socket timeout to 45 seconds
   serverApi: {
@@ -12,7 +13,7 @@ const client = new MongoClient(process.env.CONNECTION_STRING, {
 
 export const startServer = async (app, port) => {
   try {
-    await mongoose.connect(process.env.CONNECTION_STRING, {
+    await mongoose.connect(config.CONNECTION_STRING, {
       serverSelectionTimeoutMS: 30000, // Set timeout to 30 seconds
       socketTimeoutMS: 45000, // Set socket timeout to 45 seconds
       serverApi: {

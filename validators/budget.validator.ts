@@ -3,7 +3,7 @@ import { z } from "zod";
 export const BudgetSchema = z.object({
   category: z.string(),
   userId: z.string(),
-  budgetAmount: z.coerce.number().int().min(0),
+  budgetAmount: z.coerce.number().int().min(1),
   month: z.coerce.number(),
   year: z.coerce.number(),
   isDeleted: z.coerce.boolean().default(false),

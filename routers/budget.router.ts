@@ -10,7 +10,7 @@ import {
 const budgetRouter = Router();
 
 budgetRouter.post("/", createBudget);
-budgetRouter.get("/", getBudgets);
+budgetRouter.get("/pageNo/:pageNo/limit/:limit", getBudgets);
 budgetRouter.get("/:id", getBudget);
 budgetRouter.patch("/:id", updateBudget);
 budgetRouter.delete("/:id", deleteBudget);

@@ -68,6 +68,9 @@ export const signInUser =  async (reqBody: any) => {
 
     return signedToken;
   } catch (error) {
+    if (error instanceof ZodError) {
+      throw new AppError("Validation failed", 400);
+    }
     throw error;
   }
 }

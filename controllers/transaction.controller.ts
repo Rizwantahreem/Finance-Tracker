@@ -1,12 +1,12 @@
-import { TransactionModel } from "../models/transaction.model.js";
-import mongoose from "mongoose";
 import type { Request, Response, NextFunction } from "express";
-import {
-  TransactionSchema,
-  UpdateTransactionSchema,
-} from "../validators/transaction.validator.js";
 import { AppError } from "../utils/AppError.js";
-import { ZodError } from "zod";
+import { 
+  createNewTransaction, 
+  deleteTransactionById, 
+  getAllTransactions, 
+  getTransactionById, 
+  updateTransactionById 
+} from "../services/transaction.service.js";
 
 // @Desc - Get all transactions
 export const getTransactions = async (
@@ -20,13 +20,24 @@ export const getTransactions = async (
       return;
     }
 
-    const transactions = await TransactionModel.find({
-      isDeleted: false,
-      userId: req.user.id,
-    });
+    // Support both path params (/pageNo/2/limit/3) 
+    // for this - use req?.query  query params (?pageNo=2&limit=3)
+    const pageNo = Number(req?.params?.pageNo);
+    const limit = Number(req?.params?.limit);
+    
+    const transactionsData = await getAllTransactions(
+      req?.user?.id, 
+      pageNo, 
+      limit
+    );
+
     res
       .status(200)
-      .json({ transactions: transactions, message: "Fetched transactions" });
+      .json({
+        transactions: transactionsData?.transactions,
+        totalRecords: transactionsData?.totalRecords,
+        message: "Fetched transactions"
+      });
   } catch (error) {
     next(error);
   }
@@ -45,13 +56,7 @@ export const getTransaction = async (
   }
 
   try {
-    const transaction = await TransactionModel.findById(id);
-
-    if (!transaction) {
-      next(new AppError("No transaction found", 404));
-      return;
-    }
-
+    const transaction = await getTransactionById(id)
     res.status(200).json(transaction);
   } catch (error) {
     next(error);
@@ -70,29 +75,11 @@ export const createTransaction = async (
       return;
     }
 
-    const body = TransactionSchema.parse({
-      ...req.body,
-      userId: req.user.id,
-    });
-
-    const newTransaction = new TransactionModel({
-      amount: body.amount,
-      description: body.description || "",
-      type: body.type,
-      userId: body.userId,
-      category: body.categoryId,
-      transactionDate: body.transactionDate,
-    });
-
-    await newTransaction.save();
+    const id = await createNewTransaction(req?.body, req?.user?.id);
     res.status(201).json({
-      message: `transaction with id ${newTransaction._id} created successfully`,
+      message: `transaction with id ${id} created successfully`,
     });
   } catch (error) {
-    if (error instanceof ZodError) {
-      next(new AppError("Validation failed", 400));
-      return;
-    }
     next(error);
   }
 };
@@ -103,28 +90,10 @@ export const deleteTransaction = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const id = req.params.id;
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    next(new AppError("Invalid id", 400));
-    return;
-  }
+  const id = req.params.id || '';
 
   try {
-    const transaction = await TransactionModel.updateOne(
-      { _id: id, isDeleted: false },
-      { isDeleted: true }
-    );
-
-    if (transaction.matchedCount === 0) {
-      next(
-        new AppError(
-          `Transaction with id ${id} not found or already deleted.`,
-          404
-        )
-      );
-      return;
-    }
-
+    await deleteTransactionById(id);
     res
       .status(200)
       .json({ message: `Transaction with id ${id} deleted successfully` });
@@ -140,31 +109,10 @@ export const updateTransaction = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const body = UpdateTransactionSchema.parse(req.body);
-    const id = req.params.id;
 
-    if (!id || !body || !mongoose.Types.ObjectId.isValid(id)) {
-      next(new AppError("Invalid value(s)", 400));
-      return;
-    }
-
-    const transaction = await TransactionModel.updateOne(
-      { _id: id, isDeleted: false },
-      { $set: body },
-      { runValidators: true }
-    );
-
-    if (transaction.matchedCount === 0) {
-      next(new AppError(`Transaction with id ${id} not found.`, 404));
-      return;
-    }
-
+    const id = await updateTransactionById(req?.body, req?.params?.id || '');
     res.status(200).json({ message: `transaction with id ${id} updated.` });
   } catch (error) {
-    if (error instanceof ZodError) {
-      next(new AppError("Validation failed", 400));
-      return;
-    }
     next(error);
   }
 };

@@ -24,13 +24,15 @@ export const signIn = async (
   try {
     
     const signedToken = await signInUser(req?.body);
-
+    res.cookie("token", signedToken,
+      {
+        httpOnly: true,
+        secure: false,
+        sameSite: "strict",
+        maxAge:  5 * 60 * 60 * 1000,
+      });
     res.status(200).json({ message: "log in successful" });
   } catch (error) {
-    if (error instanceof ZodError) {
-      next(new AppError("Validation failed", 400));
-      return;
-    }
     next(error);
   }
 };

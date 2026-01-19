@@ -7,6 +7,6 @@ import {
 const categoryRouter = Router();
 
 categoryRouter.post("/", createCategory);
-categoryRouter.get("/:isCustom", getCategories);
+categoryRouter.get("/isCustom/:isCustom/pageNo/:pageNo/limit/:limit", getCategories);
 
 export default categoryRouter;

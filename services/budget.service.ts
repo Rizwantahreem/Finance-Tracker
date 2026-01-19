@@ -24,7 +24,6 @@ export const createNewBudget = async (
     });
 
     await budget.save();
-    console.log(budget, typeof budget);
     return budget;
   } catch (error) {
     if (error instanceof ZodError) {
@@ -93,24 +92,32 @@ export const getBudgetById = async (budgetId: string) => {
   }
 }
 
-export const getAllBudgets = async (userId: string) => {
+export const getAllBudgets = async (userId: string, pageNo: number, limit: number) => {
   try {
 
     if (!userId) {
       throw new AppError("Invalid request.", 400);
     }
 
-    const budgets = await BudgetModel.find(
-      { isDeleted: false },
-      {
-        _id: 1,
-        category: 1,
-        budgetAmount: 1,
-        month: 1,
-        year: 1,
-      }
-    );
-    return budgets;
+    const query = { isDeleted: false };
+
+    const [budgets, totalRecords] = await Promise.all([
+      BudgetModel
+        .find(query, 
+         {
+          _id: 1,
+          category: 1,
+          budgetAmount: 1,
+          month: 1,
+          year: 1,
+          }
+        )
+        .skip((pageNo - 1) * limit)
+        .limit(limit),
+      BudgetModel.countDocuments(query)
+    ]);
+
+    return { budgets, totalRecords };
   } catch (error) {
     throw error;
   }

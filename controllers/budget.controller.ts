@@ -76,9 +76,16 @@ export const getBudgets = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const budget = await getAllBudgets(req?.user?.id || '');
+    const pageNo = Number(req?.params?.pageNo);
+    const limit = Number(req?.params?.limit);
+    
+    const budgetData = await getAllBudgets(req?.user?.id || '', pageNo, limit);
 
-    res.status(200).json({ message: `Budgets found.`, budget });
+    res.status(200).json({
+      message: `Budgets found.`,
+      budget: budgetData?.budgets,
+      totalRecords: budgetData?.totalRecords
+    });
   } catch (error) {
     next(error);
   }

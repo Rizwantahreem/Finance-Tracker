@@ -19,7 +19,7 @@ export const setSecurityMiddlewares = (app: Express) => {
 
   app.use(
     cors({
-      Credential: true,
+      credentials: true,
       methods: ["GET", "PATCH", "POST", "DELETE"],
       origin: config.CORS_ORIGIN.split(","),
     })
@@ -27,5 +27,5 @@ export const setSecurityMiddlewares = (app: Express) => {
   app.use(express.json({ limit: "100kb" }));
   app.use(urlencoded({ extended: false, limit: "100kb" }));
 
-  app.use(cookieParser());
+  app.use(cookieParser ());
 };

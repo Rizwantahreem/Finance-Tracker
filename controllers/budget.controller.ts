@@ -1,11 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
-import { BudgetModel } from "../models/budget.model.js";
-import {
-  BudgetSchema,
-  UpdateBudgetSchema,
-} from "../validators/budget.validator.js";
-import { AppError } from "../utils/AppError.js";
-import { ZodError } from "zod";
+import { 
+  createNewBudget, 
+  deleteBudgetById, 
+  getAllBudgets, 
+  getBudgetById, 
+  updateBudgetById 
+} from "../services/budget.service.js";
 
 // @DESC - POST create new budget
 export const createBudget = async (
@@ -14,29 +14,10 @@ export const createBudget = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    if (!req.user?.id) {
-      next(new AppError("User not authenticated", 401));
-      return;
-    }
-
-    const body = BudgetSchema.parse({ ...req.body, userId: req.user.id });
-
-    const budget = new BudgetModel({
-      budgetAmount: body.budgetAmount,
-      userId: body.userId,
-      month: body.month,
-      year: body.year,
-      category: body.category,
-    });
-
-    await budget.save();
+    const budget = await createNewBudget(req?.user?.id || "", req.body);
 
     res.status(201).json({ message: `Budget with id ${budget._id} created.` });
   } catch (error) {
-    if (error instanceof ZodError) {
-      next(new AppError("Validation failed", 400));
-      return;
-    }
     next(error);
   }
 };
@@ -49,31 +30,10 @@ export const updateBudget = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const id = req.params.id;
-    const body = UpdateBudgetSchema.parse(req.body);
-
-    if (!id || !body) {
-      next(new AppError("Invalid data.", 400));
-      return;
-    }
-
-    const budget = await BudgetModel.updateOne(
-      { _id: id, isDeleted: false },
-      { $set: body },
-      { runValidators: true }
-    );
-
-    if (budget.matchedCount === 0) {
-      next(new AppError(`Budget with id ${id} not found.`, 404));
-      return;
-    }
-
+    
+    const id = await updateBudgetById(req?.params?.id || '', req?.user?.id || '', req?.body)
     res.status(200).json({ message: `Budget with id ${id} updated.` });
   } catch (error) {
-    if (error instanceof ZodError) {
-      next(new AppError("Validation failed", 400));
-      return;
-    }
     next(error);
   }
 };
@@ -85,18 +45,8 @@ export const deleteBudget = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const id = req.params.id;
-
-    const deletedBudget = await BudgetModel.updateOne(
-      { _id: id },
-      { $set: { isDeleted: true } }
-    );
-
-    if (deletedBudget.matchedCount === 0) {
-      next(new AppError(`Budget with id ${id} not found.`, 404));
-      return;
-    }
-
+    
+    const id = await deleteBudgetById(req?.params?.id || '')
     res.status(200).json({ message: `Budget with id ${id} deleted.` });
   } catch (error) {
     next(error);
@@ -111,10 +61,9 @@ export const getBudget = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const id = req.params.id;
-    const budget = await BudgetModel.findOne({ _id: id });
+    const budget = await getBudgetById(req.params.id || '');
+    res.status(200).json({ message: `Budget with id ${req.params.id} found.`, budget });
 
-    res.status(200).json({ message: `Budget with id ${id} found.`, budget });
   } catch (error) {
     next(error);
   }
@@ -127,18 +76,16 @@ export const getBudgets = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const budget = await BudgetModel.find(
-      { isDeleted: false },
-      {
-        _id: 1,
-        category: 1,
-        budgetAmount: 1,
-        month: 1,
-        year: 1,
-      }
-    );
+    const pageNo = Number(req?.params?.pageNo);
+    const limit = Number(req?.params?.limit);
+    
+    const budgetData = await getAllBudgets(req?.user?.id || '', pageNo, limit);
 
-    res.status(200).json({ message: `Budgets found.`, budget });
+    res.status(200).json({
+      message: `Budgets found.`,
+      budget: budgetData?.budgets,
+      totalRecords: budgetData?.totalRecords
+    });
   } catch (error) {
     next(error);
   }

@@ -12,7 +12,7 @@ const budgetSchema: Schema = new mongoose.Schema(
       required: true,
       ref: "user",
     },
-    budgetAmount: { type: Number, min: 0, required: true },
+    budgetAmount: { type: Number, min: 1, required: true },
     month: { type: Number, required: true },
     year: { type: Number, required: true },
     isDeleted: { type: Boolean, required: true, default: false },
@@ -34,7 +34,7 @@ budgetSchema.pre("save", async function () {
     throw new Error("Budget can only be created for expense categories");
   }
 
-  const exists = await Budget.findOne({
+  const exists = await Budget?.findOne({
     userId: this.userId,
     category: this.category,
     month: this.month,

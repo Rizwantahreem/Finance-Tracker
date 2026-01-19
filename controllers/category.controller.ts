@@ -7,6 +7,7 @@ import {
 } from "../validators/category.validator.js";
 import { AppError } from "../utils/AppError.js";
 import { ZodError } from "zod";
+import { createNewCategory, deleteCategoryById, getAllCategories, updateCategoryById } from "../services/category.service.js";
 
 export const createCategory = async (
   req: Request,
@@ -14,29 +15,11 @@ export const createCategory = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    if (!req.body) {
-      next(new AppError("Invalid body", 400));
-      return;
-    }
-    const body = CategorySchema.parse(req.body);
-
-    const newCategory = new CategoryModel({
-      name: body.name,
-      type: body.type,
-      userId: req.user?.id || null,
-      description: body.description,
-    });
-
-    await newCategory.save();
-
+    const id = await createNewCategory(req?.body, req?.user?.id || null);
     res
       .status(201)
-      .json({ message: `Category with id ${newCategory._id} created` });
+      .json({ message: `Category with id ${id} created` });
   } catch (error) {
-    if (error instanceof ZodError) {
-      next(new AppError("Validation failed", 400));
-      return;
-    }
     next(error);
   }
 };
@@ -47,20 +30,17 @@ export const getCategories = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const isCustomFlag = Boolean(req.params.isCustom);
-    let categories = [];
+    const isCustomFlag = req?.params?.isCustom?.toLowerCase() == "true" ? true : false;
+    const pageNo = Number(req?.params?.pageNo);
+    const limit = Number(req?.params?.limit);
 
-    if (isCustomFlag) {
-      if (!req.user?.id) {
-        next(new AppError("User not authenticated", 401));
-        return;
-      }
-      categories = await CategoryModel.find({ userId: req.user.id });
-    } else {
-      categories = await CategoryModel.find({});
-    }
+    const categoriesData = await getAllCategories(req?.user?.id || '', isCustomFlag, pageNo, limit);
 
-    res.status(200).json({ message: "categories fetch.", categories });
+    res.status(200).json({
+      message: "categories fetch.",
+      categories: categoriesData?.categories,
+      totalRecord: categoriesData?.totalRecords
+    });
   } catch (error) {
     next(error);
   }
@@ -72,17 +52,9 @@ export const deleteCategory = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const categoryID = req.params.categoryId;
+    const categoryID = req.params.categoryId || '';
 
-    const category: DeleteResult = await CategoryModel.deleteOne({
-      _id: categoryID,
-    });
-
-    if (category.deletedCount === 0) {
-      next(new AppError("No matching category was found.", 404));
-      return;
-    }
-
+    await deleteCategoryById(categoryID);
     res
       .status(200)
       .json({ message: `Category with id ${categoryID} is deleted.` });
@@ -97,28 +69,13 @@ export const updateCategory = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const categoryId = req.params.id;
-    const updatedBody = UpdateCategorySchema.parse(req.body);
-
-    const updatedCategory = await CategoryModel.updateOne(
-      { _id: categoryId },
-      { $set: updatedBody },
-      { runValidators: true }
-    );
-
-    if (updatedCategory.matchedCount === 0) {
-      next(new AppError(`Category with id ${categoryId} not found.`, 404));
-      return;
-    }
+    const categoryId = req.params.id || '';
+    await updateCategoryById(req?.body, categoryId);
 
     res
       .status(200)
       .json({ message: `Category with id ${categoryId} updated.` });
   } catch (error) {
-    if (error instanceof ZodError) {
-      next(new AppError("Validation failed", 400));
-      return;
-    }
     next(error);
   }
 };

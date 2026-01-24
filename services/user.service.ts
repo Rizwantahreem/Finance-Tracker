@@ -5,10 +5,15 @@ import { UserModel } from "../models/user.model.js";
 import { SignInSchema, UserSchema } from "../validators/user.validator.js";
 import { AppError } from "../utils/AppError.js";
 import { ZodError } from "zod";
+import mongoose from "mongoose";
 
 export const getUserByEmail = async (email: string) => {
   return await UserModel.findOne({ email: email });
 };
+
+export const getUserById = async (id: string) => {
+  return await UserModel.findById({ _id: new mongoose.Types.ObjectId(id) });
+}
 
 export const createUser = async (reqBody: any) => {
   try {
@@ -58,6 +63,7 @@ export const signInUser =  async (reqBody: any) => {
         name: user.name,
         role: user.role,
         id: user._id.toString(),
+        tokenVersion: user?.tokenVersion || 0
       },
       config.SECRET_KEY,
       {
@@ -71,6 +77,17 @@ export const signInUser =  async (reqBody: any) => {
     if (error instanceof ZodError) {
       throw new AppError("Validation failed", 400);
     }
+    throw error;
+  }
+}
+
+export const logOutUser = async (userId: string) => {
+  try {
+    await UserModel.updateOne(
+      { _id: new mongoose.Types.ObjectId(userId) },
+      { $inc: { tokenVersion: 1 } }
+    )
+  } catch (error: any) {
     throw error;
   }
 }

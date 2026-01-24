@@ -14,7 +14,7 @@ const userSchema = new Schema(
     role: { type: String, required: true, maxlength: 50 },
     phoneNumber: { type: String, required: false, match: /^[0-9]{10}$/ },
     isEmailVerified: { type: Boolean, required: true, default: false },
-    tokenVersion: { type: Number, default: 0, min: 0 }
+    tokenVersion: { type: Number, default: 0, required: true }
   },
   { timestamps: true }
 );

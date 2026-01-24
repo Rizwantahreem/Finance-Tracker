@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { createUser, signInUser } from "../services/user.service.js";
+import { createUser, logOutUser, signInUser } from "../services/user.service.js";
 import { AppError } from "../utils/AppError.js";
 import { ZodError } from "zod";
 
@@ -36,3 +36,17 @@ export const signIn = async (
     next(error);
   }
 };
+
+export const logOut = async(
+  req: Request,
+  res: Response, 
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req?.user?.id || '';
+    await logOutUser(userId);
+    res.json({ message: "successful log out"})
+  } catch (error) {
+    next(error);
+  }
+}

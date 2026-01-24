@@ -9,13 +9,15 @@ import { config } from "../config/env.js";
 export const setSecurityMiddlewares = (app: Express) => {
   app.use(helmet()); // prenvention from XSS, clickjacking & sniffing and unsafe framing
 
-  const limiterOptions = rateLimit({
-    standardHeaders: true,
-    legacyHeaders: false,
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-  });
-  app.use(limiterOptions);
+  if (process.env.NODE_ENV !== "test") {
+    const limiterOptions = rateLimit({
+      standardHeaders: true,
+      legacyHeaders: false,
+      windowMs: 15 * 60 * 1000,
+      max: 10,
+    });
+    app.use(limiterOptions);
+  }
 
   app.use(
     cors({

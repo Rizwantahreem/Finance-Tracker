@@ -11,6 +11,7 @@ export const UserSchema = z.object({
     .regex(/^[0-9]{10}$/)
     .optional(),
   isEmailVerified: z.boolean().default(false),
+  tokenVersion: z.number().min(0).default(0)
 });
 
 export const SignInSchema = UserSchema.pick({ email: true, password: true });

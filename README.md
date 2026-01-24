@@ -1,16 +1,22 @@
 # Finance Tracker API
 
-A comprehensive RESTful API for personal finance management built with Node.js, Express, TypeScript, and MongoDB. Track your income, expenses, budgets, and get detailed analytics on your spending habits.
+A RESTful API for personal finance management built with Node.js, Express, TypeScript, and MongoDB. Track income, expenses, budgets, and analytics.
+
+## Current Status
+
+- Score: **7/10** – Solid auth, validation, and security middleware are in place. Needs structured logging, health checks, deployment script, and tests to be production-ready.
+- Strengths: JWT auth, Zod validation, helmet + rate limiting, pagination on list endpoints.
+- Gaps: No health/ready checks, no structured logger, dev-only start script, no tests yet, pagination metadata not returned.
 
 ## Features
 
-- **User Authentication**: Secure JWT-based authentication with role-based access control
-- **Transaction Management**: Create, read, update, and delete income/expense transactions
-- **Category Management**: Organize transactions with custom categories
-- **Budget Tracking**: Set monthly budgets and track spending against them
-- **Analytics Dashboard**: Get insights on spending patterns, savings, and budget utilization
-- **Security**: Helmet, CORS, rate limiting, and secure password hashing
-- **Type Safety**: Full TypeScript support with strict mode enabled
+- **User Authentication**: JWT-based auth with role-based access control
+- **Transaction & Category Management**: CRUD for income/expense transactions and categories
+- **Budget Tracking**: Monthly budgets with soft delete
+- **Analytics Dashboard**: Spending patterns, budget utilization, and summaries
+- **Security**: Helmet, CORS, rate limiting (10 requests / 15 min window), bcrypt hashing
+- **Validation**: Zod schemas across inputs
+- **Pagination**: Skip/limit pagination on list endpoints
 
 ## Prerequisites
 
@@ -32,7 +38,7 @@ A comprehensive RESTful API for personal finance management built with Node.js, 
    ```
 
 3. **Set up environment variables**
-   
+
    Create a `.env` file in the root directory:
    ```env
    PORT=8000
@@ -48,7 +54,6 @@ A comprehensive RESTful API for personal finance management built with Node.js, 
    ```bash
    npm run dev
    ```
-
    The server will start on `http://localhost:8000` (or the port specified in your `.env` file).
 
 ## Project Structure
@@ -118,7 +123,7 @@ The token is automatically set as an HTTP-only cookie upon successful login.
 
 ### Transactions
 
-- `GET /api/transaction` - Get all transactions (requires auth)
+- `GET /api/transaction` - Get all transactions (requires auth; supports pagination via `pageNo`, `limit`)
 - `GET /api/transaction/:id` - Get a specific transaction (requires auth)
 - `POST /api/transaction` - Create a new transaction (requires auth)
 - `PATCH /api/transaction/:id` - Update a transaction (requires auth)
@@ -127,12 +132,12 @@ The token is automatically set as an HTTP-only cookie upon successful login.
 ### Categories
 
 - `POST /api/category` - Create a new category (requires auth)
-- `GET /api/category/:isCustom` - Get categories (requires auth)
+- `GET /api/category/:isCustom` - Get categories (requires auth; supports pagination via `pageNo`, `limit`)
 
 ### Budgets
 
 - `POST /api/budget` - Create a new budget (requires auth)
-- `GET /api/budget` - Get all budgets (requires auth)
+- `GET /api/budget` - Get all budgets (requires auth; supports pagination via `pageNo`, `limit`)
 - `GET /api/budget/:id` - Get a specific budget (requires auth)
 - `PATCH /api/budget/:id` - Update a budget (requires auth)
 - `DELETE /api/budget/:id` - Delete a budget (requires auth)
@@ -148,19 +153,21 @@ For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.m
 
 ## Scripts
 
-- `npm run dev` - Start development server with hot reload
-- `npm run start` - Start development server
-- `npm run dev-dist` - Run compiled JavaScript from dist folder
-- `npm test` - Run tests (to be implemented)
+- `npm run dev` - Start development server with hot reload (tsx)
+- `npm start` - Alias for development watch
+- `npm run dev-dist` - Run compiled JavaScript from `dist/` (requires prior build step)
+- `npm test` - Placeholder (no tests yet)
+
+**Production suggestion:** add a build step (`tsc`) and `start:prod` script (`node dist/server.js`) before deploying.
 
 ## Security Features
 
-- **Helmet**: Sets various HTTP headers for security
+- **Helmet**: Secure HTTP headers
 - **CORS**: Configurable cross-origin resource sharing
-- **Rate Limiting**: Prevents brute-force and DDoS attacks (8 requests per 15 minutes)
+- **Rate Limiting**: 10 requests per 15 minutes per IP
 - **JWT Authentication**: Secure token-based authentication
 - **Password Hashing**: bcrypt with 12 salt rounds
-- **Input Validation**: Zod schema validation for all inputs
+- **Input Validation**: Zod schema validation for inputs
 - **Error Handling**: Centralized error handling with proper error messages
 
 ## Tech Stack
@@ -185,6 +192,14 @@ For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.m
 | `DB_USER_PASSWORD` | Database password | NO (If you added it in connection string) |
 | `ENC_ALGO` | JWT encryption algorithm (e.g., HS256) | Yes |
 | `CORS_ORIGIN` | Allowed CORS origins (comma-separated) | Yes |
+
+## Production Hardening (next steps)
+
+- Add `/healthz` and `/readyz` endpoints (ping DB, return 200/500).
+- Add structured logging (Winston or Pino) with JSON output and request logging.
+- Add a build + `start:prod` script and consider a Dockerfile for deployment.
+- Return pagination metadata (`totalItems`, `totalPages`, `pageNo`, `limit`) on list endpoints.
+- Add integration tests for auth, budgets, transactions, and categories.
 
 ## Error Handling
 

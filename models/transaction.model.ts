@@ -23,4 +23,9 @@ const transactionSchema = new Schema(
   { timestamps: true }
 );
 
+transactionSchema.index({ userId: 1, transactionDate: -1 });
+transactionSchema.index({ userId: 1, isDeleted: 1 });
+transactionSchema.index({ userId: 1, type: 1, transactionDate: -1 });
+
 export const TransactionModel = model("Transaction", transactionSchema);
+

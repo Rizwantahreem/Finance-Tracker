@@ -36,7 +36,9 @@ export const verifyToken = async (
     const userId = String(decodedUser?.id) || '';
     const user = await getUserById(userId)
 
-    if (user?.tokenVersion !== decodedUser?.tokenVersion) {
+    const hasTokenVersionClaim =
+      typeof decodedUser?.tokenVersion === "number";
+    if (hasTokenVersionClaim && user?.tokenVersion !== decodedUser.tokenVersion) {
       next(new AppError("Token expired", 401));
       return;
     }

@@ -1,4 +1,6 @@
 // This runs BEFORE any test files are loaded
+import "dotenv/config";
+
 // Set all required environment variables here
 process.env.NODE_ENV = "test";
 process.env.SECRET_KEY = process.env.SECRET_KEY || "test-secret-key";
@@ -7,8 +9,11 @@ process.env.CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:4200";
 process.env.PORT = process.env.PORT || "0";
 process.env.DB_USER = process.env.DB_USER || "test-user";
 process.env.DB_USER_PASSWORD = process.env.DB_USER_PASSWORD || "test-password";
-// Temporary connection string - will be replaced in setup.ts
-process.env.CONNECTION_STRING = process.env.CONNECTION_STRING || "mongodb://localhost:27017/test-temp";
+// CONNECTION_STRING from .env for Atlas; test-db connects with dbName finance-tracker-test
+process.env.CONNECTION_STRING =
+  process.env.TEST_MONGODB_URI ||
+  process.env.CONNECTION_STRING ||
+  "mongodb://localhost:27017/test-temp";
 
 export default async () => {
   // Global setup if needed

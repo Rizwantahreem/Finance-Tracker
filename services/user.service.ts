@@ -20,7 +20,7 @@ export const createUser = async (reqBody: any) => {
     const body = UserSchema.parse(reqBody);
     
     if (!body || Object.entries(body).length === 0) {
-      new AppError("Invalid request.", 400);
+      throw new AppError("Invalid request.", 400);
     }
 
     const encryptedPassword = await bcrypt.hash(body.password, 12);
@@ -38,7 +38,15 @@ export const createUser = async (reqBody: any) => {
     if (error instanceof ZodError) {
       throw new AppError("Validation failed", 400);
     }
-
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code?: number }).code === 11000
+    ) {
+      throw new AppError("User with this email already exists", 409);
+    }
+    throw error;
   }
 }
 

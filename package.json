@@ -4,11 +4,17 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev-dist": "node dist/server.js",
     "dev": "tsx watch server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "start:prod": "NODE_ENV=production node dist/server.js",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "start": "tsx watch server.ts"
+    "docker:build": "docker build -t finance-tracker .",
+    "docker:dev": "docker-compose up finance-tracker-dev",
+    "docker:staging": "docker-compose up finance-tracker-staging",
+    "docker:prod": "docker-compose up finance-tracker-prod",
+    "docker:down": "docker-compose down"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +30,9 @@
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.0.0",
     "mongoose": "^9.0.1",
+    "pino": "^10.3.0",
+    "pino-http": "^11.0.0",
+    "pino-pretty": "^11.2.3",
     "tsx": "^4.21.0",
     "zod": "^4.3.4"
   },
@@ -37,7 +46,6 @@
     "@types/node": "^25.0.3",
     "@types/supertest": "^6.0.3",
     "cors": "^2.8.5",
-    "mongodb-memory-server": "^10.4.3",
     "supertest": "^7.0.0",
     "ts-node": "^10.9.2",
     "vitest": "^1.6.1"

@@ -1,9 +1,22 @@
-import mongoose, { Schema, model } from "mongoose";
+import mongoose, { Schema } from "mongoose";
+
+export interface Category extends mongoose.Document {
+  name: string;
+  type: "expense" | "income" | "saving";
+  userId?: mongoose.Types.ObjectId;
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 const categorySchema = new Schema(
   {
     name: { type: String, required: true, minlength: 3, maxLength: 100 },
-    type: { type: String, required: true, enum: ["expense", "income"] },
+    type: {
+      type: String,
+      required: true,
+      enum: ["expense", "income", "saving"],
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       required: false,
@@ -11,7 +24,12 @@ const categorySchema = new Schema(
     },
     description: { type: String, required: false },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    collection: "categories", // Explicit collection name
+  },
 );
 
-export const CategoryModel = model("category", categorySchema);
+export const CategoryModel =
+  mongoose.models.category ??
+  mongoose.model<Category>("category", categorySchema);

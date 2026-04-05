@@ -1,5 +1,14 @@
 import mongoose, { Schema } from "mongoose";
 
+interface Budget extends mongoose.Document {
+  category: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  budgetAmount: number;
+  month: number;
+  year: number;
+  isDeleted: boolean;
+}
+
 const budgetSchema: Schema = new mongoose.Schema(
   {
     category: {
@@ -17,7 +26,10 @@ const budgetSchema: Schema = new mongoose.Schema(
     year: { type: Number, required: true },
     isDeleted: { type: Boolean, required: true, default: false },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    collection: "budgets", // Explicit collection name
+  },
 );
 
 budgetSchema.pre("save", async function () {
@@ -48,4 +60,5 @@ budgetSchema.pre("save", async function () {
   }
 });
 
-export const BudgetModel = mongoose.model("budget", budgetSchema);
+export const BudgetModel =
+  mongoose.models.budget ?? mongoose.model<Budget>("budget", budgetSchema);

@@ -27,7 +27,7 @@ export const signIn = async (
     res.cookie("token", signedToken,
       {
         httpOnly: true,
-        secure: false,
+        secure: process.env.NODE_ENV === "production", // Only secure in production (requires HTTPS)
         sameSite: "strict",
         maxAge:  5 * 60 * 60 * 1000,
       });

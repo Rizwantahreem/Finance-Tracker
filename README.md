@@ -156,7 +156,15 @@ For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.m
 - `npm run dev` - Start development server with hot reload (tsx)
 - `npm start` - Alias for development watch
 - `npm run dev-dist` - Run compiled JavaScript from `dist/` (requires prior build step)
-- `npm test` - Placeholder (no tests yet)
+- `npm test` - Vitest integration tests
+
+**Tests and MongoDB:** Tests use **`CONNECTION_STRING` from `.env`** (Atlas, same as `npm run dev`) with database **`finance-tracker-test`** only. `afterEach` clears all collections there — keep dev data in a different DB (e.g. `finance-tracker-dev`).
+
+```env
+# Optional: different URI for tests only
+TEST_MONGODB_URI=...
+TEST_DB_NAME=finance-tracker-test
+```
 
 **Production suggestion:** add a build step (`tsc`) and `start:prod` script (`node dist/server.js`) before deploying.
 

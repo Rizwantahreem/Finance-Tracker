@@ -14,7 +14,8 @@ export const setSecurityMiddlewares = (app: Express) => {
       standardHeaders: true,
       legacyHeaders: false,
       windowMs: 15 * 60 * 1000,
-      max: 10,
+      max: 25,
+      message: "Too many requests, please try again later.",
     });
     app.use(limiterOptions);
   }
@@ -24,10 +25,10 @@ export const setSecurityMiddlewares = (app: Express) => {
       credentials: true,
       methods: ["GET", "PATCH", "POST", "DELETE"],
       origin: config.CORS_ORIGIN.split(","),
-    })
+    }),
   );
   app.use(express.json({ limit: "100kb" }));
   app.use(urlencoded({ extended: false, limit: "100kb" }));
 
-  app.use(cookieParser ());
+  app.use(cookieParser());
 };

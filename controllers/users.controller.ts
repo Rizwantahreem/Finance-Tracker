@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { createUser, signInUser } from "../services/user.service.js";
+import { createUser, logOutUser, signInUser } from "../services/user.service.js";
 import { AppError } from "../utils/AppError.js";
 import { ZodError } from "zod";
 
@@ -27,7 +27,7 @@ export const signIn = async (
     res.cookie("token", signedToken,
       {
         httpOnly: true,
-        secure: false,
+        secure: process.env.NODE_ENV === "production", // Only secure in production (requires HTTPS)
         sameSite: "strict",
         maxAge:  5 * 60 * 60 * 1000,
       });
@@ -36,3 +36,17 @@ export const signIn = async (
     next(error);
   }
 };
+
+export const logOut = async(
+  req: Request,
+  res: Response, 
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req?.user?.id || '';
+    await logOutUser(userId);
+    res.json({ message: "successful log out"})
+  } catch (error) {
+    next(error);
+  }
+}

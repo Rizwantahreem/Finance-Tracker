@@ -43,20 +43,30 @@ export const getSummary = async (
 
     const unUsedBudget = await getUnusedBudget(now, userId);
 
-    summary.totalSavings =
-      totalTypesSum && totalTypesSum[0]
-        ? totalTypesSum[0]?.totalAmount - totalTypesSum[1]?.totalAmount
-        : 0;
+    const amountByType = (totalTypesSum ?? []).reduce<Record<string, number>>(
+      (acc, item: { type?: string; totalAmount?: number }) => {
+        if (item?.type) {
+          acc[item.type] = Number(item.totalAmount ?? 0);
+        }
+        return acc;
+      },
+      {}
+    );
+    const savingsAmount = amountByType.saving ?? amountByType.income ?? 0;
+    const expenseAmount = amountByType.expense ?? 0;
 
-    summary.totalExpenses =
-      totalTypesSum && totalTypesSum[1] ? totalTypesSum[1]?.totalAmount : 0;
+    summary.totalSavings = savingsAmount - expenseAmount;
+    summary.totalExpenses = expenseAmount;
     summary.highlySpentCategory = highlySpentCategory
       ? highlySpentCategory[0]?.categoryName
       : "";
 
-    summary.budgetToExpenseTracking = `${
-      budgetToTransaction?.utilizationSign
-    }${budgetToTransaction?.utilizationPercentage.toFixed(2)}`;
+    const utilizationSign = budgetToTransaction?.utilizationSign ?? "-";
+    const utilizationPercentage =
+      typeof budgetToTransaction?.utilizationPercentage === "number"
+        ? budgetToTransaction.utilizationPercentage
+        : 0;
+    summary.budgetToExpenseTracking = `${utilizationSign}${utilizationPercentage.toFixed(2)}`;
 
     summary.unbudgetedSpending = unbudgetedSpending || 0;
     summary.unUsedBudget = unUsedBudget || 0;

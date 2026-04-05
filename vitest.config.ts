@@ -7,8 +7,16 @@ export default defineConfig({
     globalSetup: ["./tests/global-setup.ts"],
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/**/*.test.ts"],
-    hookTimeout: 120000, // 120 seconds for MongoMemoryServer to download/start
-    testTimeout: 30000,
+    // One process avoids duplicate Mongoose model registration across test files
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
+    fileParallelism: false,
+    hookTimeout: 60_000,
+    testTimeout: 30_000,
     coverage: {
       reporter: ["text", "html"],
     },

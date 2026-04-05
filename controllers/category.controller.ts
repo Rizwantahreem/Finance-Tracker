@@ -39,7 +39,8 @@ export const getCategories = async (
     res.status(200).json({
       message: "categories fetch.",
       categories: categoriesData?.categories,
-      totalRecord: categoriesData?.totalRecords
+      totalRecord: categoriesData?.totalRecords,
+      totalPages: Math.ceil(categoriesData?.totalRecords / limit)
     });
   } catch (error) {
     next(error);

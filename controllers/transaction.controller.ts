@@ -36,7 +36,8 @@ export const getTransactions = async (
       .json({
         transactions: transactionsData?.transactions,
         totalRecords: transactionsData?.totalRecords,
-        message: "Fetched transactions"
+        totalPages: Math.ceil(transactionsData?.totalRecords/limit),
+        message: "Transactions fetched"
       });
   } catch (error) {
     next(error);

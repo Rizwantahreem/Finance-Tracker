@@ -3,3 +3,6 @@ env.*
 node_modules
 package-lock.json
 *.png
+*.js
+*.js.map
+/dist/*

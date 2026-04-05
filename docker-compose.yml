@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # Development environment
+  finance-tracker-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: finance-tracker-dev
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - DB_NAME=finance-tracker-dev
+      - CONNECTION_STRING=${CONNECTION_STRING}
+      - SECRET_KEY=${SECRET_KEY}
+      - ENC_ALGO=${ENC_ALGO:-HS256}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000,http://localhost:4200}
+      - LOG_LEVEL=debug
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/healthz', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    networks:
+      - finance-tracker-network
+
+  # Staging environment
+  finance-tracker-staging:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: finance-tracker-staging
+    ports:
+      - "5001:5000"
+    environment:
+      - NODE_ENV=staging
+      - PORT=5000
+      - DB_NAME=finance-tracker-staging
+      - CONNECTION_STRING=${CONNECTION_STRING_STAGING}
+      - SECRET_KEY=${SECRET_KEY_STAGING}
+      - ENC_ALGO=${ENC_ALGO:-HS256}
+      - CORS_ORIGIN=${CORS_ORIGIN_STAGING}
+      - LOG_LEVEL=info
+    env_file:
+      - .env.staging
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/healthz', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    networks:
+      - finance-tracker-network
+
+  # Production environment
+  finance-tracker-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: finance-tracker-prod
+    ports:
+      - "5002:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - DB_NAME=finance-tracker-prod
+      - CONNECTION_STRING=${CONNECTION_STRING_PROD}
+      - SECRET_KEY=${SECRET_KEY_PROD}
+      - ENC_ALGO=${ENC_ALGO:-HS256}
+      - CORS_ORIGIN=${CORS_ORIGIN_PROD}
+      - LOG_LEVEL=warn
+    env_file:
+      - .env.production
+    restart: always
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/healthz', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    networks:
+      - finance-tracker-network
+
+networks:
+  finance-tracker-network:
+    driver: bridge

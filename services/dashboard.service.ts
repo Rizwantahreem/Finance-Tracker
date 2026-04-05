@@ -202,7 +202,7 @@ export async function getUnbudgetedSpending(currentDate: Date, userId: string) {
       },
       {
         $lookup: {
-          from: "budget",
+          from: "budgets",
           let: { categoryId: "$category" },
           pipeline: [
             {

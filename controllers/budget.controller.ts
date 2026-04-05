@@ -84,7 +84,8 @@ export const getBudgets = async (
     res.status(200).json({
       message: `Budgets found.`,
       budget: budgetData?.budgets,
-      totalRecords: budgetData?.totalRecords
+      totalRecords: budgetData?.totalRecords,
+      totalPages: Math.ceil(budgetData?.totalRecords / limit)
     });
   } catch (error) {
     next(error);

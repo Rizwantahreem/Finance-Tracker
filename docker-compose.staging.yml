@@ -1,5 +1,7 @@
 services:
-  # Staging stack
+  # Staging stack — same pattern as docker-compose.yml: values come from Compose
+  # variable interpolation (project-root .env is loaded automatically). You can
+  # also run: docker compose --env-file .env.staging -f docker-compose.staging.yml up
   finance-tracker-staging:
     build:
       context: .
@@ -9,14 +11,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - NODE_ENV=staging
-      - PORT=8000
-      - DB_NAME=finance-tracker-staging
-      - CONNECTION_STRING=${CONNECTION_STRING_STAGING}
-      - SECRET_KEY=${SECRET_KEY_STAGING}
-      - ENC_ALGO=${ENC_ALGO:-HS256}
-      - CORS_ORIGIN=${CORS_ORIGIN_STAGING}
-      - LOG_LEVEL=info
+      NODE_ENV: staging
+      PORT: ${PORT:-8000}
+      DB_NAME: ${DB_NAME:-finance-tracker-dev}
+      CONNECTION_STRING: ${CONNECTION_STRING}
+      SECRET_KEY: ${SECRET_KEY}
+      ENC_ALGO: ${ENC_ALGO:-HS256}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     env_file:
       - .env.staging
     restart: unless-stopped

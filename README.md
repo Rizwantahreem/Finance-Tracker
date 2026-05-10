@@ -147,7 +147,7 @@ For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.m
 |------|---------|
 | [`Dockerfile`](./Dockerfile) | Multi-stage build; `production` target runs compiled Node app as a non-root user. |
 | [`docker-compose.yml`](./docker-compose.yml) | Local **development** stack: service `finance-tracker-dev`, port `8000`, loads `.env`. |
-| [`docker-compose.staging.yml`](./docker-compose.staging.yml) | **Staging** stack: service `finance-tracker-staging`, loads `.env.staging`, expects host-side Compose variables `CONNECTION_STRING_STAGING`, `SECRET_KEY_STAGING`, and `CORS_ORIGIN_STAGING` for YAML substitution (define them in project-root `.env` or your shell — see [.example.env](./.example.env)). |
+| [`docker-compose.staging.yml`](./docker-compose.staging.yml) | **Staging** stack: injects config via `environment: …: ${VAR}` (same idea as [`docker-compose.yml`](./docker-compose.yml)). Compose reads variables for `${…}` from the project **`.env`** by default, or from **`--env-file .env.staging`** (see `npm run docker:staging`). |
 
 ```bash
 npm run build
@@ -223,7 +223,7 @@ TEST_DB_NAME=finance-tracker-test
 | `CORS_ORIGIN` | Allowed CORS origins (comma-separated) | Yes |
 | `LOG_LEVEL` | Pino level: `fatal` … `trace` | Optional |
 
-**Staging Docker Compose (host / root `.env`):** `CONNECTION_STRING_STAGING`, `SECRET_KEY_STAGING`, `CORS_ORIGIN_STAGING` — passed into the container as `CONNECTION_STRING`, `SECRET_KEY`, and `CORS_ORIGIN`. See [.example.env](./.example.env).
+**Staging:** Use **`npm run docker:staging`** (passes `--env-file .env.staging`) or run `docker compose -f docker-compose.staging.yml up` from the repo root so Compose can fill `${CONNECTION_STRING}`, `${SECRET_KEY}`, etc. from **`.env`**. A service-only `env_file:` block does **not** participate in `${VAR}` substitution and can be unreliable for passing secrets depending on how you run the stack—this project uses explicit `environment` + interpolation instead. To share the **same MongoDB database** as development, use the same `CONNECTION_STRING` and `DB_NAME` in the file you pass to `--env-file` or in `.env`.
 
 ## Production Hardening (next steps)
 

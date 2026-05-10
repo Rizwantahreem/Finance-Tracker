@@ -4,9 +4,8 @@ A RESTful API for personal finance management built with Node.js, Express, TypeS
 
 ## Current Status
 
-- Score: **7/10** – Solid auth, validation, and security middleware are in place. Needs structured logging, health checks, deployment script, and tests to be production-ready.
-- Strengths: JWT auth, Zod validation, helmet + rate limiting, pagination on list endpoints.
-- Gaps: No health/ready checks, no structured logger, dev-only start script, no tests yet, pagination metadata not returned.
+- Strengths: JWT auth, Zod validation, Helmet + rate limiting, pagination on list endpoints, Pino structured logging, `/healthz` and `/readyz`, Vitest integration tests, Docker multi-stage image, separate Compose files for development and staging.
+- Production polish: pagination metadata on list responses, OpenAPI docs, and CI/CD are still optional next steps.
 
 ## Features
 
@@ -39,16 +38,7 @@ A RESTful API for personal finance management built with Node.js, Express, TypeS
 
 3. **Set up environment variables**
 
-   Create a `.env` file in the root directory:
-   ```env
-   PORT=8000
-   CONNECTION_STRING=your_mongodb_connection_string
-   SECRET_KEY=your_jwt_secret_key
-   DB_USER=your_db_username
-   DB_USER_PASSWORD=your_db_password
-   ENC_ALGO=HS256
-   CORS_ORIGIN=http://localhost:3000,http://localhost:4200
-   ```
+   Copy [.example.env](./.example.env) to `.env` and fill in real values. Required fields are validated at startup in [`config/env.ts`](./config/env.ts).
 
 4. **Start the development server**
    ```bash
@@ -151,11 +141,42 @@ The token is automatically set as an HTTP-only cookie upon successful login.
 
 For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md).
 
+## Docker
+
+| File | Purpose |
+|------|---------|
+| [`Dockerfile`](./Dockerfile) | Multi-stage build; `production` target runs compiled Node app as a non-root user. |
+| [`docker-compose.yml`](./docker-compose.yml) | Local **development** stack: service `finance-tracker-dev`, port `8000`, loads `.env`. |
+| [`docker-compose.staging.yml`](./docker-compose.staging.yml) | **Staging** stack: service `finance-tracker-staging`, loads `.env.staging`, expects host-side Compose variables `CONNECTION_STRING_STAGING`, `SECRET_KEY_STAGING`, and `CORS_ORIGIN_STAGING` for YAML substitution (define them in project-root `.env` or your shell — see [.example.env](./.example.env)). |
+
+```bash
+npm run build
+npm run docker:dev              # development compose
+npm run docker:staging          # staging compose (uses -f docker-compose.staging.yml)
+npm run docker:staging:down     # tear down staging stack
+npm run docker:down             # tear down default (dev) compose project
+```
+
+Build staging image explicitly:
+
+```bash
+docker compose -f docker-compose.staging.yml build
+docker compose -f docker-compose.staging.yml up
+```
+
+Compose validates service names under `services:` — use YAML comments (`# ...`) for labels, not bare keys like `Staging environment:`.
+
+### Secrets and logs
+
+The API **does not log** `SECRET_KEY`. When it logs MongoDB connection details, the URI is **redacted** (credentials replaced with `//***@`) in [`config/DbConnection.ts`](./config/DbConnection.ts).
+
+Avoid sharing the full output of `docker compose config`: it resolves `${…}` from your environment and can **print secret values**. Inspect the compose YAML directly, or validate in a private shell.
+
 ## Scripts
 
 - `npm run dev` - Start development server with hot reload (tsx)
-- `npm start` - Alias for development watch
-- `npm run dev-dist` - Run compiled JavaScript from `dist/` (requires prior build step)
+- `npm run build` - Compile TypeScript to `dist/`
+- `npm start` / `npm run start:prod` - Run compiled app (`node dist/server.js`)
 - `npm test` - Vitest integration tests
 
 **Tests and MongoDB:** Tests use **`CONNECTION_STRING` from `.env`** (Atlas, same as `npm run dev`) with database **`finance-tracker-test`** only. `afterEach` clears all collections there — keep dev data in a different DB (e.g. `finance-tracker-dev`).
@@ -165,8 +186,6 @@ For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.m
 TEST_MONGODB_URI=...
 TEST_DB_NAME=finance-tracker-test
 ```
-
-**Production suggestion:** add a build step (`tsc`) and `start:prod` script (`node dist/server.js`) before deploying.
 
 ## Security Features
 
@@ -194,20 +213,23 @@ TEST_DB_NAME=finance-tracker-test
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `PORT` | Server port number | Yes |
+| `NODE_ENV` | `development` \| `staging` \| `production` \| `test` | Optional (defaults to `development`) |
 | `CONNECTION_STRING` | MongoDB connection string | Yes |
+| `DB_NAME` | Database name | Optional (defaults by `NODE_ENV`; see `config/env.ts`) |
 | `SECRET_KEY` | JWT secret key | Yes |
-| `DB_USER` | Database username | NO (If you added it in connection string)|
-| `DB_USER_PASSWORD` | Database password | NO (If you added it in connection string) |
+| `DB_USER` | Database username | Optional if embedded in connection string |
+| `DB_USER_PASSWORD` | Database password | Optional if embedded in connection string |
 | `ENC_ALGO` | JWT encryption algorithm (e.g., HS256) | Yes |
 | `CORS_ORIGIN` | Allowed CORS origins (comma-separated) | Yes |
+| `LOG_LEVEL` | Pino level: `fatal` … `trace` | Optional |
+
+**Staging Docker Compose (host / root `.env`):** `CONNECTION_STRING_STAGING`, `SECRET_KEY_STAGING`, `CORS_ORIGIN_STAGING` — passed into the container as `CONNECTION_STRING`, `SECRET_KEY`, and `CORS_ORIGIN`. See [.example.env](./.example.env).
 
 ## Production Hardening (next steps)
 
-- Add `/healthz` and `/readyz` endpoints (ping DB, return 200/500).
-- Add structured logging (Winston or Pino) with JSON output and request logging.
-- Add a build + `start:prod` script and consider a Dockerfile for deployment.
 - Return pagination metadata (`totalItems`, `totalPages`, `pageNo`, `limit`) on list endpoints.
-- Add integration tests for auth, budgets, transactions, and categories.
+- Add a production-focused `docker-compose` (or platform-specific) definition when you deploy.
+- Expand integration tests and CI (e.g., GitHub Actions) as needed.
 
 ## Error Handling
 

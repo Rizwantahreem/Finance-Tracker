@@ -67,5 +67,16 @@ describe("Auth & Users API", () => {
     expect(res.statusCode).toBe(404);
     expect(res.body.message).toBe("User not found");
   });
+
+  it("should reject login with wrong password for existing user", async () => {
+    await request(app).post(`${basePath}/sign-up`).send(validUser);
+
+    const res = await request(app)
+      .post(`${basePath}/log-in`)
+      .send({ email: validUser.email, password: "wrong-password" });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe("Invalid credentials");
+  });
 });
 

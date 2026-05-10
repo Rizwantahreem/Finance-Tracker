@@ -28,9 +28,10 @@ RUN addgroup -g 1001 -S nodejs && \
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production && \
+# Install dependencies
+RUN npm ci && \
   npm cache clean --force
+# --only=production
 
 # Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
@@ -41,12 +42,12 @@ RUN chown -R nodejs:nodejs /app
 # Switch to non-root user
 USER nodejs
 
-# Expose port (default 5000, can be overridden via env)
-EXPOSE 5000
+# Expose port (default 8000, can be overridden via env)
+EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:5000/healthz', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "require('http').get('http://localhost:8000/healthz', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Start the application
 CMD ["node", "dist/server.js"]

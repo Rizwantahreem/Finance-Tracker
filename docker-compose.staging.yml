@@ -1,25 +1,24 @@
-
 services:
-  # Development environment
-  finance-tracker-dev:
+  # Staging stack
+  finance-tracker-staging:
     build:
       context: .
       dockerfile: Dockerfile
       target: production
-    container_name: finance-tracker-dev
+    container_name: finance-tracker-staging
     ports:
       - "8000:8000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=staging
       - PORT=8000
-      - DB_NAME=finance-tracker-dev
-      - CONNECTION_STRING=${CONNECTION_STRING}
-      - SECRET_KEY=${SECRET_KEY}
+      - DB_NAME=finance-tracker-staging
+      - CONNECTION_STRING=${CONNECTION_STRING_STAGING}
+      - SECRET_KEY=${SECRET_KEY_STAGING}
       - ENC_ALGO=${ENC_ALGO:-HS256}
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000,http://localhost:4200}
-      - LOG_LEVEL=debug
+      - CORS_ORIGIN=${CORS_ORIGIN_STAGING}
+      - LOG_LEVEL=info
     env_file:
-      - .env
+      - .env.staging
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:8000/healthz', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]

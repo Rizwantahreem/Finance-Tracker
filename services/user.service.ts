@@ -13,12 +13,12 @@ export const getUserByEmail = async (email: string) => {
 
 export const getUserById = async (id: string) => {
   return await UserModel.findById({ _id: new mongoose.Types.ObjectId(id) });
-}
+};
 
 export const createUser = async (reqBody: any) => {
   try {
     const body = UserSchema.parse(reqBody);
-    
+
     if (!body || Object.entries(body).length === 0) {
       throw new AppError("Invalid request.", 400);
     }
@@ -48,9 +48,9 @@ export const createUser = async (reqBody: any) => {
     }
     throw error;
   }
-}
+};
 
-export const signInUser =  async (reqBody: any) => {
+export const signInUser = async (reqBody: any) => {
   try {
     const body = SignInSchema.parse(reqBody);
     const user = await getUserByEmail(body.email);
@@ -61,7 +61,7 @@ export const signInUser =  async (reqBody: any) => {
 
     const isPassMatched = await bcrypt.compare(body.password, user.password);
     if (!isPassMatched) {
-      new AppError("Invalid credentials", 400)
+      throw new AppError("Invalid credentials", 400);
     }
 
     const signedToken = jwt.sign(
@@ -71,13 +71,13 @@ export const signInUser =  async (reqBody: any) => {
         name: user.name,
         role: user.role,
         id: user._id.toString(),
-        tokenVersion: user?.tokenVersion || 0
+        tokenVersion: user?.tokenVersion || 0,
       },
       config.SECRET_KEY,
       {
         expiresIn: "5h",
         algorithm: config.ENC_ALGO as jwt.Algorithm,
-      }
+      },
     );
 
     return signedToken;
@@ -87,15 +87,15 @@ export const signInUser =  async (reqBody: any) => {
     }
     throw error;
   }
-}
+};
 
 export const logOutUser = async (userId: string) => {
   try {
     await UserModel.updateOne(
       { _id: new mongoose.Types.ObjectId(userId) },
-      { $inc: { tokenVersion: 1 } }
-    )
+      { $inc: { tokenVersion: 1 } },
+    );
   } catch (error: any) {
     throw error;
   }
-}
+};

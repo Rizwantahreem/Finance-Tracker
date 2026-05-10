@@ -13,8 +13,8 @@ export const setSecurityMiddlewares = (app: Express) => {
     const limiterOptions = rateLimit({
       standardHeaders: true,
       legacyHeaders: false,
-      windowMs: 15 * 60 * 1000,
-      max: 25,
+      windowMs: 30 * 60 * 1000,
+      max: 50,
       message: "Too many requests, please try again later.",
     });
     app.use(limiterOptions);

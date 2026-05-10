@@ -213,7 +213,7 @@ There are **two** Compose files:
 
 Both use the same `Dockerfile` (`target: production`), set `DB_NAME` per stack, and define a `healthcheck` against `/healthz`.
 
-**Staging YAML substitution:** The staging file maps host variables `${CONNECTION_STRING_STAGING}`, `${SECRET_KEY_STAGING}`, and `${CORS_ORIGIN_STAGING}` into the container as `CONNECTION_STRING`, `SECRET_KEY`, and `CORS_ORIGIN`. Compose reads those from your **shell** or the **project-root `.env`** (used for interpolation — not the same as `env_file` alone). See `.example.env` for commented examples.
+**Staging / Compose variables:** `docker-compose.staging.yml` sets `environment: CONNECTION_STRING: ${CONNECTION_STRING}` (and the other required keys) so values are injected at container create time. Compose resolves `${…}` from the project **`.env`** (auto-loaded) and/or from **`docker compose --env-file .env.staging`**. Relying only on a service `env_file:` without matching `environment:` entries can leave `process.env` empty in some setups; `npm run docker:staging` uses `--env-file .env.staging` so interpolation matches your staging file.
 
 **Valid YAML:** Under `services:`, every key must be a real service name. Use `# Comment` for section labels; a line like `Staging environment:` is invalid and fails schema validation.
 
@@ -237,8 +237,10 @@ docker compose up finance-tracker-dev
 ```bash
 docker compose -f docker-compose.staging.yml build
 npm run docker:staging
-# or
+# or (variables from project .env only)
 docker compose -f docker-compose.staging.yml up finance-tracker-staging
+# or (variables from .env.staging only)
+docker compose -f docker-compose.staging.yml --env-file .env.staging up finance-tracker-staging
 ```
 
 **Stop containers:**
@@ -250,7 +252,7 @@ npm run docker:staging:down            # staging project
 ### Environment Files for Docker
 
 - **`.env`** — Used with `docker-compose.yml` (development).
-- **`.env.staging`** — Loaded into the staging container via `env_file`; pair it with root `.env` (or exported vars) so `${CONNECTION_STRING_STAGING}` / `${SECRET_KEY_STAGING}` / `${CORS_ORIGIN_STAGING}` resolve when Compose parses `docker-compose.staging.yml`.
+- **`.env.staging`** — Use with `docker compose --env-file .env.staging` (or `npm run docker:staging`) so `${CONNECTION_STRING}` and other keys in the compose file resolve. Same variable names as `.env`. To share one MongoDB database with dev, reuse the same `CONNECTION_STRING` and `DB_NAME`.
 
 Do not commit real `.env`, `.env.staging`, or `.env.production` files.
 

@@ -12,7 +12,7 @@
     "test:watch": "vitest watch",
     "docker:build": "docker build -t finance-tracker .",
     "docker:dev": "docker compose up finance-tracker-dev",
-    "docker:staging": "docker compose -f docker-compose.staging.yml up finance-tracker-staging",
+    "docker:staging": "docker compose -f docker-compose.staging.yml --env-file .env.staging up finance-tracker-staging",
     "docker:staging:down": "docker compose -f docker-compose.staging.yml down",
     "docker:down": "docker compose down"
   },
